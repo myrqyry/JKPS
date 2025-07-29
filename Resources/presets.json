@@ -1,0 +1,108 @@
+{
+  "presets": [
+    {
+      "name": "Minimalist",
+      "settings": {
+        "GfxButtonTexturePath": "Default",
+        "GfxButtonTextureColor": "255,255,255,255",
+        "GfxButtonDistance": 10,
+        "ButtonTextFontPath": "Default",
+        "ButtonTextColor": "0,0,0,255",
+        "ButtonTextCharacterSize": 24,
+        "StatisticsTextColor": "0,0,0,255",
+        "StatisticsTextCharacterSize": 18,
+        "BackgroundColor": "240,240,240,255",
+        "WindowTitleBar": true
+      },
+      "keys": [
+        { "real": "A", "visual": "A" },
+        { "real": "S", "visual": "S" }
+      ]
+    },
+    {
+      "name": "Arcade",
+      "settings": {
+        "GfxButtonTexturePath": "Default",
+        "GfxButtonTextureColor": "255,0,0,255",
+        "GfxButtonDistance": 20,
+        "ButtonTextFontPath": "Default",
+        "ButtonTextColor": "255,255,255,255",
+        "ButtonTextCharacterSize": 32,
+        "StatisticsTextColor": "255,255,0,255",
+        "StatisticsTextCharacterSize": 24,
+        "BackgroundColor": "0,0,0,255",
+        "WindowTitleBar": false
+      },
+      "keys": [
+        { "real": "Up", "visual": "U" },
+        { "real": "Down", "visual": "D" },
+        { "real": "Left", "visual": "L" },
+        { "real": "Right", "visual": "R" }
+      ]
+    },
+    {
+      "name": "Pro Gamer",
+      "settings": {
+        "GfxButtonTexturePath": "Default",
+        "GfxButtonTextureColor": "0,255,0,255",
+        "GfxButtonDistance": 5,
+        "ButtonTextFontPath": "Default",
+        "ButtonTextColor": "0,0,0,255",
+        "ButtonTextCharacterSize": 20,
+        "StatisticsTextColor": "255,255,255,255",
+        "StatisticsTextCharacterSize": 16,
+        "BackgroundColor": "30,30,30,255",
+        "WindowTitleBar": true
+      },
+      "keys": [
+        { "real": "Q", "visual": "Q" },
+        { "real": "W", "visual": "W" },
+        { "real": "E", "visual": "E" },
+        { "real": "R", "visual": "R" }
+      ]
+    },
+    {
+      "name": "Rainbow",
+      "settings": {
+        "GfxButtonTexturePath": "Default",
+        "GfxButtonTextureColor": "255,0,0,255",
+        "GfxButtonDistance": 15,
+        "ButtonTextFontPath": "Default",
+        "ButtonTextColor": "255,255,255,255",
+        "ButtonTextCharacterSize": 28,
+        "StatisticsTextColor": "255,255,255,255",
+        "StatisticsTextCharacterSize": 22,
+        "BackgroundColor": "128,0,128,255",
+        "WindowTitleBar": false
+      },
+      "keys": [
+        { "real": "1", "visual": "1" },
+        { "real": "2", "visual": "2" },
+        { "real": "3", "visual": "3" },
+        { "real": "4", "visual": "4" },
+        { "real": "5", "visual": "5" }
+      ]
+    },
+    {
+      "name": "Developer",
+      "settings": {
+        "GfxButtonTexturePath": "Default",
+        "GfxButtonTextureColor": "128,128,128,255",
+        "GfxButtonDistance": 8,
+        "ButtonTextFontPath": "Resources/Fonts/RobotoMono.ttf",
+        "ButtonTextColor": "0,255,0,255",
+        "ButtonTextCharacterSize": 22,
+        "StatisticsTextColor": "0,255,0,255",
+        "StatisticsTextCharacterSize": 16,
+        "BackgroundColor": "10,10,10,255",
+        "WindowTitleBar": true
+      },
+      "keys": [
+        { "real": "Ctrl", "visual": "Ctrl" },
+        { "real": "Shift", "visual": "Shift" },
+        { "real": "Alt", "visual": "Alt" },
+        { "real": "Space", "visual": "Space" }
+      ]
+    }
+  ]
+}

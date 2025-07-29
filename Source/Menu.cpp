@@ -7,11 +7,14 @@
 #include "../Headers/Default media/Textures/RefreshTexture.hpp"
 #include "../Headers/Default media/Fonts/arial_monospaced.hpp"
 #include "../Headers/Default media/Fonts/RobotoMono.hpp"
+#include "nlohmann/json.hpp"
 
 #include <SFML/Window/Event.hpp>
 #include <SFML/System/Clock.hpp>
 
 #include <limits.h>
+#include <fstream>
+#include <iostream>
 
 
 Menu::Menu()
@@ -22,6 +25,7 @@ Menu::Menu()
 , mSliderBarPressedColor(sf::Color(161,161,161))
 , mSelectedTab(0u)
 , mSelectedAdvKeyPressVisKey(0u)
+, mCurrentWindow(WindowType::Main)
 {
     loadFonts();
     loadTextures();
@@ -41,6 +45,8 @@ Menu::Menu()
     mTabs.at(mSelectedTab)->mRect.setFillColor(GfxParameter::defaultSelectedRectColor);
 
     buildAdvKeys();
+    buildPresetSelectionWindow();
+    buildTemplateSelectionWindow();
 }
 
 void Menu::processInput()
@@ -51,6 +57,74 @@ void Menu::processInput()
 
 void Menu::handleEvent()
 {
+    if (mCurrentWindow == WindowType::PresetSelection)
+    {
+        sf::Event event;
+        while (mPresetSelectionWindow.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+            {
+                mPresetSelectionWindow.close();
+                mCurrentWindow = WindowType::Main;
+            }
+
+            if (event.type == sf::Event::MouseButtonPressed)
+            {
+                if (event.mouseButton.button == sf::Mouse::Left)
+                {
+                    sf::Vector2f mousePos = mPresetSelectionWindow.mapPixelToCoords(sf::Mouse::getPosition(mPresetSelectionWindow));
+                    for (size_t i = 0; i < mPresetNames.size(); ++i)
+                    {
+                        sf::Text text(mPresetNames[i], mFonts.get(Fonts::Parameter), 20);
+                        text.setPosition(20, 20 + i * 40);
+                        if (text.getGlobalBounds().contains(mousePos))
+                        {
+                            loadPreset(mPresetNames[i]);
+                            mPresetSelectionWindow.close();
+                            mCurrentWindow = WindowType::Main;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return;
+    }
+
+    if (mCurrentWindow == WindowType::TemplateSelection)
+    {
+        sf::Event event;
+        while (mTemplateSelectionWindow.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+            {
+                mTemplateSelectionWindow.close();
+                mCurrentWindow = WindowType::Main;
+            }
+
+            if (event.type == sf::Event::MouseButtonPressed)
+            {
+                if (event.mouseButton.button == sf::Mouse::Left)
+                {
+                    sf::Vector2f mousePos = mTemplateSelectionWindow.mapPixelToCoords(sf::Mouse::getPosition(mTemplateSelectionWindow));
+                    for (size_t i = 0; i < mTemplateNames.size(); ++i)
+                    {
+                        sf::Text text(mTemplateNames[i], mFonts.get(Fonts::Parameter), 20);
+                        text.setPosition(20, 20 + i * 40);
+                        if (text.getGlobalBounds().contains(mousePos))
+                        {
+                            loadTemplate(mTemplateNames[i]);
+                            mTemplateSelectionWindow.close();
+                            mCurrentWindow = WindowType::Main;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return;
+    }
+
     auto switchTab = [this] (size_t index)
         {
             // Reset slider
@@ -70,11 +144,11 @@ void Menu::handleEvent()
     static bool scrollCursorClicked;
     while (mWindow.pollEvent(event))
     {
-        if (event.type == sf::Event::MouseButtonPressed 
+        if (event.type == sf::Event::MouseButtonPressed
         ||  event.type == sf::Event::KeyPressed
         ||  event.type == sf::Event::MouseWheelScrolled)
         {
-            if (event.type == sf::Event::KeyPressed 
+            if (event.type == sf::Event::KeyPressed
             &&  event.key.code == sf::Keyboard::Escape)
             {
                 ParameterLine::deselectValue();
@@ -129,7 +203,7 @@ void Menu::handleEvent()
             }
         }
 
-        if (event.type == sf::Event::MouseButtonPressed 
+        if (event.type == sf::Event::MouseButtonPressed
         ||  event.type == sf::Event::MouseButtonReleased
         ||  event.type == sf::Event::MouseMoved)
         {
@@ -157,7 +231,7 @@ void Menu::handleEvent()
             }
         }
 
-        if (event.type == sf::Event::MouseButtonPressed 
+        if (event.type == sf::Event::MouseButtonPressed
         ||  event.type == sf::Event::MouseButtonReleased
         ||  event.type == sf::Event::MouseMoved)
         {
@@ -175,7 +249,20 @@ void Menu::handleEvent()
                     if (event.type == sf::Event::MouseButtonPressed
                     &&  event.mouseButton.button == sf::Mouse::Left)
                     {
-                        switchTab(idx);
+                        if (tab->mText.getString() == "Load Preset")
+                        {
+                            mCurrentWindow = WindowType::PresetSelection;
+                            mPresetSelectionWindow.create(sf::VideoMode(400, 500), "Load Preset", sf::Style::Close);
+                        }
+                        else if (tab->mText.getString() == "Template Gallery")
+                        {
+                            mCurrentWindow = WindowType::TemplateSelection;
+                            mTemplateSelectionWindow.create(sf::VideoMode(400, 500), "Template Gallery", sf::Style::Close);
+                        }
+                        else
+                        {
+                            switchTab(idx);
+                        }
                     }
                 }
 
@@ -185,7 +272,7 @@ void Menu::handleEvent()
                 tab->mRect.setFillColor(color);
                 ++idx;
             }
-            
+
             for (auto &[id, block] : mKeyBlocks)
             {
                 block->handleEvent(event, absCursorPos);
@@ -216,7 +303,7 @@ void Menu::handleEvent()
                 }
             }
         }
-        
+
         if (event.type == sf::Event::KeyPressed)
         {
             const auto key = event.key;
@@ -273,8 +360,34 @@ void Menu::update()
 {
 }
 
-void Menu::render() 
+void Menu::render()
 {
+    if (mCurrentWindow == WindowType::PresetSelection)
+    {
+        mPresetSelectionWindow.clear(sf::Color(45, 45, 45));
+        for (size_t i = 0; i < mPresetNames.size(); ++i)
+        {
+            sf::Text text(mPresetNames[i], mFonts.get(Fonts::Parameter), 20);
+            text.setPosition(20, 20 + i * 40);
+            mPresetSelectionWindow.draw(text);
+        }
+        mPresetSelectionWindow.display();
+        return;
+    }
+
+    if (mCurrentWindow == WindowType::TemplateSelection)
+    {
+        mTemplateSelectionWindow.clear(sf::Color(45, 45, 45));
+        for (size_t i = 0; i < mTemplateNames.size(); ++i)
+        {
+            sf::Text text(mTemplateNames[i], mFonts.get(Fonts::Parameter), 20);
+            text.setPosition(20, 20 + i * 40);
+            mTemplateSelectionWindow.draw(text);
+        }
+        mTemplateSelectionWindow.display();
+        return;
+    }
+
     mWindow.setView(mView);
 
     mWindow.clear(sf::Color(45,45,45));
@@ -449,6 +562,8 @@ void Menu::buildMenuTabs()
     addTab("  Key press\nvisualization", highTabSize);
     addTab("Other", tabSize);
     addTab("Main info", tabSize);
+    addTab("Load Preset", tabSize);
+    addTab("Template Gallery", tabSize);
 
     mTabsBackground.setSize(sf::Vector2f(tabSize.x + offset.x * 2.f, 700.f));
     mTabsBackground.setFillColor(sf::Color(35, 35, 35));
@@ -462,7 +577,7 @@ void buildTab(Menu::KeyBlock &container, sf::Vector2i tabCoords, size_t key)
 
     auto ptr = std::make_unique<GfxParameter>("Key " + std::to_string(key), tabSize);
     const auto position = offset + sf::Vector2f(
-        (tabSize.x + distBtw.x) * static_cast<float>(tabCoords.x), 
+        (tabSize.x + distBtw.x) * static_cast<float>(tabCoords.x),
         (tabSize.y + distBtw.y) * static_cast<float>(tabCoords.y));
 
     ptr->setPosition(position);
@@ -476,7 +591,7 @@ void buildTabAdv(Menu::KeyBlock &container, sf::Vector2i tabCoords, std::string 
 
     auto ptr = std::make_unique<GfxParameter>(string, tabSize);
     const auto position = offset + sf::Vector2f(
-        (tabSize.x + distBtw.x) * static_cast<float>(tabCoords.x), 
+        (tabSize.x + distBtw.x) * static_cast<float>(tabCoords.x),
         (tabSize.y + distBtw.y) * static_cast<float>(tabCoords.y));
 
     ptr->setPosition(position);
@@ -495,7 +610,7 @@ void Menu::buildAdvKeys()
             for (size_t i = 0ul; i < 10ul; i++, ++key)
                 buildTab(container, sf::Vector2i(static_cast<int>(i), 1), key);
         };
-    
+
     auto getOrigin = [this] (ParameterLine::ID id)
         {
             const auto foundAdvBtnTextSepVal = mParameterLines.find(id);
@@ -653,7 +768,7 @@ void Menu::buildParametersMap()
         mParameters.emplace(std::make_pair(sz,                                            new LogicalParameter(LogicalParameter::Type::VectorF,       &Settings::GfxButtonsSizes[i],                          iStr + ". Size", "50,50", 0, 500)));
         mParameters.emplace(std::make_pair(clr,                                           new LogicalParameter(LogicalParameter::Type::Color,         &Settings::GfxButtonsColor[i],                          iStr + ". Color", "30,30,30,255")));
     }
-    
+
     mParameters.emplace(std::make_pair(LogicalParameter::ID::AnimGfxVel,                  new LogicalParameter(LogicalParameter::Type::Unsigned,      &Settings::AnimationFrames,                             "Animation duration (frames)", "5", 1, 120)));
 
     mParameters.emplace(std::make_pair(LogicalParameter::ID::AnimGfxLight,                new LogicalParameter(LogicalParameter::Type::Bool,          &Settings::LightAnimation,                              "Enabled", "True")));
@@ -694,7 +809,7 @@ void Menu::buildParametersMap()
     mParameters.emplace(std::make_pair(LogicalParameter::ID::KeyPressVisColor,            new LogicalParameter(LogicalParameter::Type::Color,         &Settings::KeyPressVisColor,                            "Color", "255,255,255,255")));
     mParameters.emplace(std::make_pair(LogicalParameter::ID::KeyPressVisWidthScale,       new LogicalParameter(LogicalParameter::Type::Float,         &Settings::KeyPressWidthScale,                          "Bonus width scale (%)", "100", -1000, 1000)));
     mParameters.emplace(std::make_pair(LogicalParameter::ID::KeyPressVisFixedHeight,      new LogicalParameter(LogicalParameter::Type::Float,         &Settings::KeyPressFixedHeight,                         "Fixed height to replace holds", "0", 0, 300)));
-    
+
     mParameters.emplace(std::make_pair(LogicalParameter::ID::KeyPressVisAdvMode,          new LogicalParameter(LogicalParameter::Type::Bool,          &Settings::KeyPressVisAdvSettingsMode,                  "Enable advanced mode for key press visualization", "False")));
     for (auto i = 0lu; i < Settings::SupportedAdvancedKeysNumber; ++i)
     {
@@ -734,10 +849,10 @@ void Menu::buildParameterLines()
 {
     for (auto &pair : mParameters)
     {
-        mParameterLines.emplace(std::make_pair(ParameterLine::parIdToParLineId(pair.first), 
+        mParameterLines.emplace(std::make_pair(ParameterLine::parIdToParLineId(pair.first),
             new ParameterLine(pair.second, mFonts, mTextures, mWindow)));
     }
-    
+
     using sPtr = std::shared_ptr<LogicalParameter>;
     sPtr parP = nullptr;
     sPtr emptyP(new LogicalParameter(LogicalParameter::Type::Empty, nullptr));
@@ -895,7 +1010,7 @@ void Menu::positionMenuLines()
         if (!ParameterLine::isToSkip(id))
         {
             const auto position = sf::Vector2f(
-                step.x * static_cast<float>(column) + offset.x, 
+                step.x * static_cast<float>(column) + offset.x,
                 step.y * static_cast<float>(row)    + offset.y - halfWindowSize + padding
             );
 
@@ -910,7 +1025,7 @@ void Menu::positionMenuLines()
     }
 }
 
-// The distance parameter contains offset of the view, 
+// The distance parameter contains offset of the view,
 // but the sliderbar is relative to the window,
 // so it's neccessary to normilize both offset and cursor Y position,
 // and then project the sum on the window
@@ -944,13 +1059,13 @@ void Menu::moveSliderBarButtons(float offset)
 // Real window height - 600, sliderbar height - 200
 // Virtual window should be 400, since the whole sliderbar must be in the window
 // Quick scatch - https://i.imgur.com/xBXP6II.png
-// Red - sliderbar, dark green - virtual window height, lime - real window 
+// Red - sliderbar, dark green - virtual window height, lime - real window
 // The sliderbar height has to be normilized and projected on the real window
 void Menu::moveSliderBarMouse(sf::Vector2i mousePos)
 {
     if (mBounds[mSelectedTab] < mView.getSize().y / 4)
         return;
-        
+
     const sf::Vector2f sliderbarSize = mSliderBar.getSize();
     const float highBounds = sliderbarSize.y / 2;
     const float lowBounds = mWindow.getSize().y - sliderbarSize.y / 2;
@@ -1014,6 +1129,110 @@ void Menu::updateSaveStatsStrings()
     }
 }
 
+void Menu::loadPreset(const std::string& presetName)
+{
+    std::ifstream ifs("Resources/presets.json");
+    if (!ifs.is_open())
+    {
+        std::cerr << "Failed to open presets.json" << std::endl;
+        return;
+    }
+
+    nlohmann::json j;
+    ifs >> j;
+
+    for (const auto& preset : j["presets"])
+    {
+        if (preset["name"] == presetName)
+        {
+            for (auto& [key, value] : preset["settings"].items())
+            {
+                auto it = std::find_if(mParameters.begin(), mParameters.end(),
+                    [&key](const auto& param) {
+                        return param.second->mParName == key;
+                    });
+
+                if (it != mParameters.end())
+                {
+                    it->second->fromString(value.get<std::string>());
+                    mChangedParametersQueue.push(it->first, it->second->getValStr());
+                }
+            }
+            break;
+        }
+    }
+}
+
+void Menu::loadTemplate(const std::string& templateName)
+{
+    std::ifstream ifs("Resources/templates.json");
+    if (!ifs.is_open())
+    {
+        std::cerr << "Failed to open templates.json" << std::endl;
+        return;
+    }
+
+    nlohmann::json j;
+    ifs >> j;
+
+    for (const auto& tpl : j["templates"])
+    {
+        if (tpl["name"] == templateName)
+        {
+            for (auto& [key, value] : tpl["settings"].items())
+            {
+                auto it = std::find_if(mParameters.begin(), mParameters.end(),
+                    [&key](const auto& param) {
+                        return param.second->mParName == key;
+                    });
+
+                if (it != mParameters.end())
+                {
+                    it->second->fromString(value.get<std::string>());
+                    mChangedParametersQueue.push(it->first, it->second->getValStr());
+                }
+            }
+            break;
+        }
+    }
+}
+
+void Menu::buildPresetSelectionWindow()
+{
+    std::ifstream ifs("Resources/presets.json");
+    if (!ifs.is_open())
+    {
+        std::cerr << "Failed to open presets.json" << std::endl;
+        return;
+    }
+
+    nlohmann::json j;
+    ifs >> j;
+
+    for (const auto& preset : j["presets"])
+    {
+        mPresetNames.push_back(preset["name"]);
+    }
+}
+
+void Menu::buildTemplateSelectionWindow()
+{
+    std::ifstream ifs("Resources/templates.json");
+    if (!ifs.is_open())
+    {
+        std::cerr << "Failed to open templates.json" << std::endl;
+        return;
+    }
+
+    nlohmann::json j;
+    ifs >> j;
+
+    for (const auto& tpl : j["templates"])
+    {
+        mTemplateNames.push_back(tpl["name"]);
+    }
+}
+
 Menu::KeyBlock::KeyBlock(ParameterLinesContainer &parameterLines, ParameterLine::ID placeHolder, size_t parametersNumber)
 : mParameterLines(parameterLines)
 , mFirstParameterLineId(placeHolder)
@@ -1053,7 +1272,7 @@ void Menu::KeyBlock::select(unsigned idx)
     {
         auto toHideFound = mParameterLines.find(lineToHide);
         auto toShowFound = mParameterLines.find(lineToShow);
-        
+
         assert(toHideFound != mParameterLines.end());
         assert(toShowFound != mParameterLines.end());
 
@@ -1109,7 +1328,7 @@ void Menu::KeyBlock::handleEvent(sf::Event event, sf::Vector2f absCursorPos)
                 mSelectedKeyIdx = idx;
             }
         }
-        
+
         if (mSelectedKeyIdx == idx)
             color = GfxParameter::defaultSelectedRectColor;
 

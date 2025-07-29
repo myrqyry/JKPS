@@ -1,0 +1,65 @@
+{
+  "templates": [
+    {
+      "name": "Osu! Standard",
+      "settings": {
+        "GfxButtonTexturePath": "Default",
+        "GfxButtonTextureColor": "255,255,255,255",
+        "GfxButtonDistance": 10,
+        "ButtonTextFontPath": "Default",
+        "ButtonTextColor": "0,0,0,255",
+        "ButtonTextCharacterSize": 24,
+        "StatisticsTextColor": "0,0,0,255",
+        "StatisticsTextCharacterSize": 18,
+        "BackgroundColor": "240,240,240,255",
+        "WindowTitleBar": true
+      },
+      "keys": [
+        { "real": "Z", "visual": "Z" },
+        { "real": "X", "visual": "X" }
+      ]
+    },
+    {
+      "name": "Taiko",
+      "settings": {
+        "GfxButtonTexturePath": "Default",
+        "GfxButtonTextureColor": "255,0,0,255",
+        "GfxButtonDistance": 20,
+        "ButtonTextFontPath": "Default",
+        "ButtonTextColor": "255,255,255,255",
+        "ButtonTextCharacterSize": 32,
+        "StatisticsTextColor": "255,255,0,255",
+        "StatisticsTextCharacterSize": 24,
+        "BackgroundColor": "0,0,0,255",
+        "WindowTitleBar": false
+      },
+      "keys": [
+        { "real": "D", "visual": "D" },
+        { "real": "F", "visual": "F" },
+        { "real": "J", "visual": "J" },
+        { "real": "K", "visual": "K" }
+      ]
+    },
+    {
+      "name": "Stepmania",
+      "settings": {
+        "GfxButtonTexturePath": "Default",
+        "GfxButtonTextureColor": "0,255,0,255",
+        "GfxButtonDistance": 5,
+        "ButtonTextFontPath": "Default",
+        "ButtonTextColor": "0,0,0,255",
+        "ButtonTextCharacterSize": 20,
+        "StatisticsTextColor": "255,255,255,255",
+        "StatisticsTextCharacterSize": 16,
+        "BackgroundColor": "30,30,30,255",
+        "WindowTitleBar": true
+      },
+      "keys": [
+        { "real": "Left", "visual": "L" },
+        { "real": "Down", "visual": "D" },
+        { "real": "Up", "visual": "U" },
+        { "real": "Right", "visual": "R" }
+      ]
+    }
+  ]
+}

@@ -42,6 +42,8 @@ class Menu
         void requestReloadAssets();
         bool resetReloadAssetsRequest();
 
+        void loadPreset(const std::string& presetName);
+
 
     private:
         void handleEvent();
@@ -110,9 +112,21 @@ class Menu
             KeyPressVis
         };
 
+        enum class WindowType
+        {
+            Main,
+            PresetSelection,
+            TemplateSelection
+        };
+
 
     private:
         sf::RenderWindow mWindow;
+        WindowType mCurrentWindow;
+        std::vector<std::string> mPresetNames;
+        sf::RenderWindow mPresetSelectionWindow;
+        std::vector<std::string> mTemplateNames;
+        sf::RenderWindow mTemplateSelectionWindow;
 
         FontHolder mFonts;
         TextureHolder mTextures;
