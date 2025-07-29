@@ -47,6 +47,7 @@ Menu::Menu()
     buildAdvKeys();
     buildPresetSelectionWindow();
     buildTemplateSelectionWindow();
+    buildThemeSelectionWindow();
 }
 
 void Menu::processInput()
@@ -115,6 +116,40 @@ void Menu::handleEvent()
                         {
                             loadTemplate(mTemplateNames[i]);
                             mTemplateSelectionWindow.close();
+                            mCurrentWindow = WindowType::Main;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return;
+    }
+
+    if (mCurrentWindow == WindowType::ThemeSelection)
+    {
+        sf::Event event;
+        while (mThemeSelectionWindow.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+            {
+                mThemeSelectionWindow.close();
+                mCurrentWindow = WindowType::Main;
+            }
+
+            if (event.type == sf::Event::MouseButtonPressed)
+            {
+                if (event.mouseButton.button == sf::Mouse::Left)
+                {
+                    sf::Vector2f mousePos = mThemeSelectionWindow.mapPixelToCoords(sf::Mouse::getPosition(mThemeSelectionWindow));
+                    for (size_t i = 0; i < mThemeNames.size(); ++i)
+                    {
+                        sf::Text text(mThemeNames[i], mFonts.get(Fonts::Parameter), 20);
+                        text.setPosition(20, 20 + i * 40);
+                        if (text.getGlobalBounds().contains(mousePos))
+                        {
+                            loadTheme(mThemeNames[i]);
+                            mThemeSelectionWindow.close();
                             mCurrentWindow = WindowType::Main;
                             break;
                         }
@@ -259,6 +294,11 @@ void Menu::handleEvent()
                             mCurrentWindow = WindowType::TemplateSelection;
                             mTemplateSelectionWindow.create(sf::VideoMode(400, 500), "Template Gallery", sf::Style::Close);
                         }
+                        else if (tab->mText.getString() == "Load Theme")
+                        {
+                            mCurrentWindow = WindowType::ThemeSelection;
+                            mThemeSelectionWindow.create(sf::VideoMode(400, 500), "Load Theme", sf::Style::Close);
+                        }
                         else
                         {
                             switchTab(idx);
@@ -385,6 +425,19 @@ void Menu::render()
             mTemplateSelectionWindow.draw(text);
         }
         mTemplateSelectionWindow.display();
+        return;
+    }
+
+    if (mCurrentWindow == WindowType::ThemeSelection)
+    {
+        mThemeSelectionWindow.clear(sf::Color(45, 45, 45));
+        for (size_t i = 0; i < mThemeNames.size(); ++i)
+        {
+            sf::Text text(mThemeNames[i], mFonts.get(Fonts::Parameter), 20);
+            text.setPosition(20, 20 + i * 40);
+            mThemeSelectionWindow.draw(text);
+        }
+        mThemeSelectionWindow.display();
         return;
     }
 
@@ -564,6 +617,7 @@ void Menu::buildMenuTabs()
     addTab("Main info", tabSize);
     addTab("Load Preset", tabSize);
     addTab("Template Gallery", tabSize);
+    addTab("Load Theme", tabSize);
 
     mTabsBackground.setSize(sf::Vector2f(tabSize.x + offset.x * 2.f, 700.f));
     mTabsBackground.setFillColor(sf::Color(35, 35, 35));
@@ -1197,6 +1251,57 @@ void Menu::loadTemplate(const std::string& templateName)
     }
 }
 
+void Menu::loadTheme(const std::string& themeName)
+{
+    std::ifstream ifs("Resources/themes.json");
+    if (!ifs.is_open())
+    {
+        std::cerr << "Failed to open themes.json" << std::endl;
+        return;
+    }
+
+    nlohmann::json j;
+    ifs >> j;
+
+    for (const auto& theme : j["themes"])
+    {
+        if (theme["name"] == themeName)
+        {
+            for (auto& [key, value] : theme["colors"].items())
+            {
+                if (key == "editor.background")
+                {
+                    auto it = mParameters.find(LogicalParameter::ID::BgClr);
+                    if (it != mParameters.end())
+                    {
+                        it->second->fromString(value.get<std::string>());
+                        mChangedParametersQueue.push(it->first, it->second->getValStr());
+                    }
+                }
+                else if (key == "editor.foreground")
+                {
+                    auto it = mParameters.find(LogicalParameter::ID::BtnTextClr);
+                     if (it != mParameters.end())
+                    {
+                        it->second->fromString(value.get<std::string>());
+                        mChangedParametersQueue.push(it->first, it->second->getValStr());
+                    }
+                }
+                else if (key == "editor.selectionBackground")
+                {
+                    auto it = mParameters.find(LogicalParameter::ID::BtnGfxTxtrClr);
+                     if (it != mParameters.end())
+                    {
+                        it->second->fromString(value.get<std::string>());
+                        mChangedParametersQueue.push(it->first, it->second->getValStr());
+                    }
+                }
+            }
+            break;
+        }
+    }
+}
+
 void Menu::buildPresetSelectionWindow()
 {
     std::ifstream ifs("Resources/presets.json");
@@ -1230,6 +1335,24 @@ void Menu::buildTemplateSelectionWindow()
     for (const auto& tpl : j["templates"])
     {
         mTemplateNames.push_back(tpl["name"]);
+    }
+}
+
+void Menu::buildThemeSelectionWindow()
+{
+    std::ifstream ifs("Resources/themes.json");
+    if (!ifs.is_open())
+    {
+        std::cerr << "Failed to open themes.json" << std::endl;
+        return;
+    }
+
+    nlohmann::json j;
+    ifs >> j;
+
+    for (const auto& theme : j["themes"])
+    {
+        mThemeNames.push_back(theme["name"]);
     }
 }
 

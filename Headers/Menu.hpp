@@ -116,7 +116,8 @@ class Menu
         {
             Main,
             PresetSelection,
-            TemplateSelection
+            TemplateSelection,
+            ThemeSelection
         };
 
 
@@ -127,6 +128,8 @@ class Menu
         sf::RenderWindow mPresetSelectionWindow;
         std::vector<std::string> mTemplateNames;
         sf::RenderWindow mTemplateSelectionWindow;
+        std::vector<std::string> mThemeNames;
+        sf::RenderWindow mThemeSelectionWindow;
 
         FontHolder mFonts;
         TextureHolder mTextures;
