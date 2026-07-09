@@ -1019,9 +1019,9 @@ void Menu::updateSaveStatsStrings()
     }
 }
 
-Menu::KeyBlock::KeyBlock(ParameterLinesContainer &parameterLines, ParameterLine::ID placeHolder, size_t parametersNumber)
+Menu::KeyBlock::KeyBlock(ParameterLinesContainer &parameterLines, ParameterLine::ID firstParameterLineId, size_t parametersNumber)
 : mParameterLines(parameterLines)
-, mFirstParameterLineId(placeHolder)
+, mFirstParameterLineId(firstParameterLineId)
 , mParametersNumber(parametersNumber)
 , mSelectedKeyIdx(0u)
 , mContainingTabIdx(0u)

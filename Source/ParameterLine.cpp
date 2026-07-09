@@ -297,8 +297,7 @@ bool ParameterLine::handleValueModEvent(sf::Event event)
 		else if (hasRemovedSomething && (mType == LogicalParameter::Type::Int 
 		|| mType == LogicalParameter::Type::Float || mType == LogicalParameter::Type::Unsigned))
 		{
-			// This is a dirty hack; we set the value string to the parameter so that it clamps it, 
-			// and then we read it whatever it clamped
+			// Re-apply through the parameter so it clamps the value string, then read back the clamped result
 			const int prevLen = static_cast<int>(str.length());
 			mParameter->setValStr(str, static_cast<unsigned>(btnIdx));
 			ConfigHelper::readDigitParameter(*mParameter, str);

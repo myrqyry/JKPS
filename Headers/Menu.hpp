@@ -79,7 +79,7 @@ class Menu
 
 
             public:
-                KeyBlock(ParameterLinesContainer &parameterLines, ParameterLine::ID placeHolder, size_t parametersNumber);
+                KeyBlock(ParameterLinesContainer &parameterLines, ParameterLine::ID firstParameterLineId, size_t parametersNumber);
 
                 GfxParameter &current();
                 void push(Ptr ptr);
