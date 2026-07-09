@@ -164,6 +164,9 @@ std::string *GfxStatisticsLine::getStatLineString(StatisticsID id)
         case BPM:
             str = &Settings::StatisticsBPMText;
             break;
+
+        default:
+            break;
     }
     
     assert(str);
@@ -199,6 +202,9 @@ std::string GfxStatisticsLine::getStatValueString(StatisticsID id)
 
         case BPM:
             str = std::to_string(static_cast<unsigned>(Button::getBeatsPerMinute()));
+            break;
+
+        default:
             break;
     }
     

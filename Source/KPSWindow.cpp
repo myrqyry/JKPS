@@ -7,8 +7,6 @@
 #include <SFML/Window/Event.hpp>
 
 
-static unsigned maxLen = 4U;
-
 KPSWindow::KPSWindow(const FontHolder &fonts)
 : mFonts(fonts)
 {
@@ -25,7 +23,7 @@ void KPSWindow::handleOwnEvent()
 {
     auto event = sf::Event();
     while (mWindow.pollEvent(event))
-    { 
+    {
         if (event.type == sf::Event::KeyPressed)
         {
             const auto key = event.key;
@@ -50,7 +48,7 @@ void KPSWindow::update()
             str = std::to_string(static_cast<unsigned>(kps));
         mKPSNumber.setString(str);
 
-        mKPSNumber.setOrigin((mKPSNumber.getLocalBounds().left + 
+        mKPSNumber.setOrigin((mKPSNumber.getLocalBounds().left +
             mKPSNumber.getLocalBounds().width) / 2.f, mKPSNumber.getLocalBounds().top);
     }
 }
@@ -62,10 +60,10 @@ void KPSWindow::render()
         auto textTransform = sf::Transform::Identity;
         auto numberTranform = sf::Transform::Identity;
 
-        textTransform.translate((mWindow.getSize().x - mKPSText.getLocalBounds().width + 
+        textTransform.translate((static_cast<float>(mWindow.getSize().x) - mKPSText.getLocalBounds().width +
             mKPSText.getLocalBounds().left) / 2.f, Settings::KPSWindowTopPadding);
 
-        numberTranform.translate(mWindow.getSize().x / 2.f - mKPSNumber.getLocalBounds().left, 
+        numberTranform.translate(static_cast<float>(mWindow.getSize().x) / 2.f - mKPSNumber.getLocalBounds().left,
             mKPSText.getLocalBounds().height + Settings::KPSWindowDistanceBetween + Settings::KPSWindowTopPadding);
 
         mWindow.clear(Settings::KPSBackgroundColor);
@@ -80,7 +78,7 @@ void KPSWindow::render()
 void KPSWindow::updateParameters()
 {
     mKPSText.setOrigin(mKPSText.getLocalBounds().left, mKPSText.getLocalBounds().top);
-    mKPSNumber.setOrigin((mKPSNumber.getLocalBounds().left + mKPSNumber.getLocalBounds().width) / 2.f, 
+    mKPSNumber.setOrigin((mKPSNumber.getLocalBounds().left + mKPSNumber.getLocalBounds().width) / 2.f,
         mKPSNumber.getLocalBounds().top);
 
     mKPSText.setCharacterSize(Settings::KPSTextSize);
@@ -91,7 +89,7 @@ void KPSWindow::updateParameters()
 
     mWindow.setSize(sf::Vector2u(Settings::KPSWindowSize.x, Settings::KPSWindowSize.y));
     mWindow.setView(sf::View( { 0, 0, static_cast<float>(Settings::KPSWindowSize.x), static_cast<float>(Settings::KPSWindowSize.y) } ));
-}   
+}
 
 void KPSWindow::updateAssets()
 {
@@ -104,20 +102,22 @@ void KPSWindow::openWindow()
     sf::Uint32 style;
 #ifdef _WIN32
     style = sf::Style::Close;
-#elif linux
+#elif __linux__
     style = sf::Style::Default;
 #else
 #error Unsupported compiler
 #endif
 
-    mWindow.create(sf::VideoMode(Settings::KPSWindowSize.x, 
-        Settings::KPSWindowSize.y), "KPS Window", style);
+    sf::ContextSettings settings;
+    settings.antialiasingLevel = 8;
+    mWindow.create(sf::VideoMode(Settings::KPSWindowSize.x,
+        Settings::KPSWindowSize.y), "KPS Window", style, settings);
 
-#ifdef linux
+#ifdef __linux__
     auto desktop = sf::VideoMode::getDesktopMode();
-    mWindow.setPosition(sf::Vector2i(
-        desktop.width / 1.5  - mWindow.getSize().x / 2, 
-        desktop.height / 2 - mWindow.getSize().y / 2));
+        mWindow.setPosition(sf::Vector2i(
+            static_cast<int>(static_cast<float>(desktop.width) / 1.5f - static_cast<float>(mWindow.getSize().x) / 2.f),
+            static_cast<int>(static_cast<float>(desktop.height) / 2.f - static_cast<float>(mWindow.getSize().y) / 2.f)));
 #endif
 }
 

@@ -5,6 +5,8 @@
 #include <cassert>
 #include <string>
 #include <cctype>
+#include <sstream>
+#include <vector>
 
 
 namespace Utility
@@ -12,7 +14,21 @@ namespace Utility
 
 sf::Vector2f swapY(sf::Vector2f vec)
 {
-    return ::sf::Vector2f(vec.x, -vec.y);    
+    return ::sf::Vector2f(vec.x, -vec.y);
+}
+
+std::vector<std::string> split(const std::string &str, char delimiter)
+{
+    std::vector<std::string> tokens;
+    std::stringstream ss(str);
+    std::string token;
+
+    while (std::getline(ss, token, delimiter))
+    {
+        tokens.push_back(token);
+    }
+
+    return tokens;
 }
 
 // Does not read numbers with a sign in front of it

@@ -80,10 +80,30 @@ float GfxButtonDistance;
 std::string GfxButtonTexturePath;
 sf::Vector2u GfxButtonTextureSize;
 sf::Color GfxButtonTextureColor;
+sf::Color GfxButtonBorderColor;
+int ButtonShape = 0;
 bool GfxButtonAdvancedMode;
 Container<sf::Vector2f> GfxButtonsBtnPositions;
 Container<sf::Vector2f> GfxButtonsSizes;
 Container<sf::Color> GfxButtonsColor;
+
+// [Button graphics scaling]
+float GfxButtonScaleFactor;
+float GfxButtonAnimationScaleFactor;
+float GfxButtonTextScaleFactor;
+float GfxButtonMinScale;
+float GfxButtonMaxScale;
+Container<float> GfxButtonAdvScaleFactor;
+Container<float> GfxButtonAdvAnimationScaleFactor;
+Container<float> GfxButtonAdvTextScaleFactor;
+
+// [Theme system]
+int CurrentThemeIndex;
+
+// [Overlay settings]
+bool IsOverlayApplication;
+float OverlayScaleFactor;
+float GlobalScaleFactor;
 
 // [Animation graphics]
 bool LightAnimation;
@@ -104,6 +124,7 @@ bool isGreenscreenSet;
 
 // [Main window]
 bool WindowTitleBar;
+bool WindowResizable = true;
 unsigned RenderUpdateFrequency;
 int WindowBonusSizeTop;
 int WindowBonusSizeBottom;
@@ -170,6 +191,7 @@ sf::Keyboard::Key KeyExit = sf::Keyboard::W;
 sf::Keyboard::Key KeyToOpenKPSWindow = sf::Keyboard::K;
 sf::Keyboard::Key KeyToOpenMenuWindow = sf::Keyboard::A;
 sf::Keyboard::Key KeyToOpenGraphWindow = sf::Keyboard::G;
+sf::Keyboard::Key KeyToOpenStyleWizard = sf::Keyboard::S;
 
 // Saved parameters
 float MaxKPS;

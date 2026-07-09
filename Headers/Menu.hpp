@@ -17,7 +17,7 @@
 
 class Button;
 
-class Menu 
+class Menu
 {
     public:
         using ParameterLinesContainer = std::map<ParameterLine::ID, std::shared_ptr<ParameterLine>>;
@@ -38,6 +38,7 @@ class Menu
         ChangedParametersQueue &getChangedParametersQueue();
 
         void saveConfig(const std::vector<std::unique_ptr<Button>> &mKeys);
+        void reloadConfig();
         void requestFocus();
         void requestReloadAssets();
         bool resetReloadAssetsRequest();
@@ -60,7 +61,7 @@ class Menu
         void buildParametersMap();
         void buildParameterLines();
         void buildAdvKeys();
-        
+
         void positionMenuLines();
 
         void moveSliderBarButtons(float offset);

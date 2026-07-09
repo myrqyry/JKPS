@@ -11,6 +11,7 @@
 #include "Background.hpp"
 #include "KPSWindow.hpp"
 #include "KeysPerSecondGraph.hpp"
+#include "StyleWizard.hpp"
 
 #include <SFML/System/Time.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
@@ -73,7 +74,7 @@ class Application
         static const sf::Time TimePerHookUpdate;
 
         sf::RenderWindow mWindow;
-        
+
         TextureHolder mTextures;
         FontHolder mFonts;
 
@@ -89,4 +90,5 @@ class Application
         std::unique_ptr<Background> mBackground;
         std::unique_ptr<KPSWindow> mKPSWindow;
         std::unique_ptr<KeysPerSecondGraph> mGraph;
+        std::unique_ptr<StyleWizard> mStyleWizard;
 };

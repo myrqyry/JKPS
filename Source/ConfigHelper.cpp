@@ -6,22 +6,23 @@
 
 #include <iostream>
 #include <stdexcept>
-#include <stdio.h>
+#include <cassert>
 #include <fstream>
 #include <array>
 #include <algorithm>
 #include <cctype>
+#include <filesystem>
 
 
 std::string getReadingErrMsg(const LogicalParameter &par, std::string_view collection)
 {
-    return std::string("Failed to read '" + std::string(collection.begin(), collection.end()) 
+    return std::string("Failed to read '" + std::string(collection.begin(), collection.end())
         + " " + par.mParName + "'. Default value will be set.\n");
 }
 
 std::string getOutOfBoundsErrMsg(const LogicalParameter &par)
 {
-    return "Input value is out of bounds - " + par.mParName + " cannot be less than " + std::to_string(par.mLowLimits) + 
+    return "Input value is out of bounds - " + par.mParName + " cannot be less than " + std::to_string(par.mLowLimits) +
         " or more than " + std::to_string(par.mHighLimits) + ". Default value will be set.\n";
 }
 
@@ -45,10 +46,13 @@ ParameterPath getOldParName(ParameterPath parPath);
 std::string cfgPath("JKPS.cfg");
 std::string tmpCfgPath("tmpJKPS.cfg");
 std::string errLogPath("JKPS_errlog.txt");
-std::ifstream ifCfg;
-std::ofstream ofCfg;
-std::ifstream ifErrLog;
-std::ofstream ofErrLog;
+
+// RAII wrappers for error log streams
+namespace
+{
+    std::ofstream ofErrLog;
+    std::ifstream ifErrLog;
+}
 
 namespace ConfigHelper
 {
@@ -56,7 +60,7 @@ namespace ConfigHelper
 const std::string separationSign(" $SEPARATION$ ");
 
 bool readConfig(
-    Menu::ParametersContainer &parameters, 
+    Menu::ParametersContainer &parameters,
     const std::vector<std::string> &collectionNames)
 {
     // Remove error log if there is already one
@@ -64,26 +68,20 @@ bool readConfig(
     if (ifErrLog.is_open())
     {
         ifErrLog.close();
-        remove(errLogPath.c_str());
-    }
-
-    // Open config / Generate default one
-    ifCfg.open(cfgPath);
-    if (!ifCfg.is_open())
-    {
-        std::cerr << "Failed to open the config. Default config will be generated.\n";
-        return false;
+        std::filesystem::remove(errLogPath);
     }
 
     // Create new error log for further warnings
     ofErrLog.open(errLogPath);
+
+    // Clear any cached config to force re-read
+    clearConfigCacheImpl();
 
     // Read all the parameters, except keys and buttons
     readParameters(parameters, collectionNames);
     controlAssets(parameters);
 
     // Finish work with files on last method
-    ifCfg.close();
     ofErrLog.close();
 
     // Delete error log if there are no errors
@@ -93,7 +91,7 @@ bool readConfig(
         if (ifErrLog.get() == EOF)
         {
             ifErrLog.close();
-            remove(errLogPath.c_str());
+            std::filesystem::remove(errLogPath);
         }
         else
             ifErrLog.close();
@@ -144,12 +142,12 @@ std::queue<LogKey> getLogKeys()
 
     const auto keysStr = scanParameterValue(parName1, parameterFound1, parameterEmpty1, "[" + parName1 + "]");
     const auto visualKeysStr = scanParameterValue(parName2, null, null, "[" + parName2 + "]");
-         
+
     if (!parameterFound1 || parameterEmpty1 || keysStr == "No" || keysStr == "no" || keysStr == "NO")
         return { };
 
     auto keyboardQueue = readKeys(keysStr, visualKeysStr);
-    
+
     return keyboardQueue;
 }
 
@@ -167,7 +165,7 @@ std::queue<LogKey> oldGetLogKeys()
 
     if (!isParamFound)
         keysStr = scanParameterValue(oldParName1, isParamFound, isParamNull, "[" + oldParName1 + "]");
-         
+
     if (!isParamFound || isParamNull || keysStr == "No" || keysStr == "no" || keysStr == "NO")
         return { };
 
@@ -196,68 +194,73 @@ bool isCollection(std::string_view str)
     return str.at(0ul) == '[';
 }
 
-// Finds the parameter and returns everything after its name and ": ", 
-// can also return empty string, if there is no such parameter or if there is no value
-std::string scanParameterValue(const std::string &parName, bool &isParamFound, bool &isValueNull, std::string collection)
+namespace
 {
-    std::ifstream cfg(cfgPath);
-    assert(cfg.is_open());
+    std::unordered_map<std::string, std::map<std::string, std::string>> sConfigCache;
+    bool sCacheReady = false;
+}
 
-    auto line = std::string();
-    auto correntCollection = false;
-    auto i = 0ul;
+void clearConfigCacheImpl()
+{
+    sConfigCache.clear();
+    sCacheReady = false;
+}
 
-    const auto parLen = parName.length();
-
-    while (!cfg.eof() && i != parLen)
+std::string scanParameterValueCached(const std::string &parName, bool &isParamFound, bool &isValueNull, const std::string &collection)
+{
+    if (!sCacheReady)
     {
-        getline(cfg, line);
-
-        if (line.empty())
-            continue;
-        else if (collection == line)
-            correntCollection = true;
-        else if (correntCollection && isCollection(line))
-            correntCollection = false;
-        
-        if (!correntCollection)
-            continue;
-
-        // Compare the whole name, but not its value
-        for (i = 0ul; i < parLen; ++i)
+        sConfigCache.clear();
+        std::ifstream cfg(cfgPath);
+        if (cfg.is_open())
         {
-            if (line[i] != parName[i])
+            std::string line, currentCollection;
+            while (std::getline(cfg, line))
             {
-                i = 0ul;
-                break;
+                if (line.empty())
+                    continue;
+                if (line.front() == '[' && line.back() == ']')
+                {
+                    currentCollection = line;
+                    continue;
+                }
+                auto colonPos = line.find(": ");
+                if (colonPos == std::string::npos)
+                    continue;
+                auto name = line.substr(0, colonPos);
+                auto value = line.substr(colonPos + 2);
+                sConfigCache[currentCollection][name] = value;
             }
         }
-        if (line[i] != ':')
-            i = 0ul;
+        sCacheReady = true;
     }
 
-    cfg.close();
-
-    // If the loop finished with an invalid collection the parameter was not found
-    if (!correntCollection)
+    auto colIt = sConfigCache.find(collection);
+    if (colIt == sConfigCache.end())
     {
         isParamFound = false;
         isValueNull = true;
         return "";
     }
 
-    // Has it 2 characters afterwards? (": " has to be deleted)
-    if (line.length() <= parName.length() + 2ul)
+    auto parIt = colIt->second.find(parName);
+    if (parIt == colIt->second.end())
     {
-        isParamFound = true;
+        isParamFound = false;
         isValueNull = true;
         return "";
     }
 
     isParamFound = true;
-    isValueNull = false;
-    // Remove parameter name, ':' and space after it
-    return std::string(line.begin() + parLen + 2ul, line.end());
+    isValueNull = parIt->second.empty();
+    return parIt->second;
+}
+
+// Finds the parameter and returns everything after its name and ": ",
+// can also return empty string, if there is no such parameter or if there is no value
+std::string scanParameterValue(const std::string &parName, bool &isParamFound, bool &isValueNull, std::string collection)
+{
+    return scanParameterValueCached(parName, isParamFound, isValueNull, collection);
 }
 
 bool isToCheck(LogicalParameter::Type type)
@@ -282,7 +285,7 @@ bool isNumber(std::string_view valStr)
         return false;
 
     const auto ch = valStr.front();
-    
+
     if (std::isdigit(ch))
     {
         return true;
@@ -353,15 +356,15 @@ void readParameter(LogicalParameter &par, std::string collection)
 
     switch(par.mType)
     {
-        case LogicalParameter::Type::Unsigned: 
-        case LogicalParameter::Type::Int:      
+        case LogicalParameter::Type::Unsigned:
+        case LogicalParameter::Type::Int:
         case LogicalParameter::Type::Float:    par.setDigit(readDigitParameter(par, valStr)); break;
         case LogicalParameter::Type::Bool:     par.setBool(readBoolParameter(par, valStr));  break;
-        case LogicalParameter::Type::StringPath: 
+        case LogicalParameter::Type::StringPath:
         case LogicalParameter::Type::String:   par.setString(valStr); break;
         case LogicalParameter::Type::Color:    par.setColor(readColorParameter(par, valStr)); break;
-        case LogicalParameter::Type::VectorU: 
-        case LogicalParameter::Type::VectorI: 
+        case LogicalParameter::Type::VectorU:
+        case LogicalParameter::Type::VectorI:
         case LogicalParameter::Type::VectorF:  par.setVector(readVectorParameter(par, valStr)); break;
         default: break;
     }
@@ -369,10 +372,10 @@ void readParameter(LogicalParameter &par, std::string collection)
 
     if (par.mType == LogicalParameter::Type::StringPath)
     {
-        if (par.mType == LogicalParameter::Type::StringPath 
+        if (par.mType == LogicalParameter::Type::StringPath
         &&  Settings::BackgroundTexturePath == "GreenscreenBG.png")
             return;
-            
+
         std::ifstream check(par.getString());
         if (check.is_open())
         {
@@ -389,8 +392,8 @@ void readParameter(LogicalParameter &par, std::string collection)
 
 float readDigitParameter(const LogicalParameter &par, std::string &valStr)
 {
-    auto handleError = [&] (bool useDefault) 
-        { 
+    auto handleError = [&] (bool useDefault)
+        {
 			const std::string errStr = getOutOfBoundsErrMsg(par);
 			if (ofErrLog.is_open())
 			{
@@ -398,7 +401,7 @@ float readDigitParameter(const LogicalParameter &par, std::string &valStr)
 			}
 			std::cout << errStr;
 			valStr = useDefault ? par.getDefValStr() : std::to_string(static_cast<int>(par.mLowLimits));
-            return readDigitParameter(par, valStr); 
+            return readDigitParameter(par, valStr);
         };
 
     const auto lowLim = par.mLowLimits, highLim = par.mHighLimits;
@@ -416,16 +419,16 @@ float readDigitParameter(const LogicalParameter &par, std::string &valStr)
 
 sf::Vector2f readVectorParameter(const LogicalParameter &par, const std::string &valStr)
 {
-    auto handleError = [&] () 
-        { 
+    auto handleError = [&] ()
+        {
             ofErrLog << getOutOfBoundsErrMsg(par);
-            return readVectorParameter(par, par.getDefValStr()); 
+            return readVectorParameter(par, par.getDefValStr());
         };
 
     const auto size = 2ul;
     float vec[size];
     const auto lowLim = par.mLowLimits, highLim = par.mHighLimits;
-    
+
     for (auto i = 0ul, strIdx = 0ul; i < size; ++i)
     {
         const auto &substr = valStr.substr(strIdx, 81ul);
@@ -454,10 +457,10 @@ sf::Vector2f readVectorParameter(const LogicalParameter &par, const std::string 
 
 sf::Color readColorParameter(const LogicalParameter &par, const std::string &valStr)
 {
-    auto handleError = [&] () 
-        { 
+    auto handleError = [&] ()
+        {
             ofErrLog << getOutOfBoundsErrMsg(par);
-            return readColorParameter(par, par.getDefValStr()); 
+            return readColorParameter(par, par.getDefValStr());
         };
 
     const auto size = 4ul;
@@ -490,10 +493,10 @@ sf::Color readColorParameter(const LogicalParameter &par, const std::string &val
             }
             if (found == std::string::npos && ofErrLog.is_open())
                 return handleError();
-                
+
             strIdx += found + 1ul;
         }
-        
+
         if (!isNumber(substr))
             return handleError();
 
@@ -511,19 +514,16 @@ bool readBoolParameter(const LogicalParameter &par, const std::string &valStr)
 {
     if (valStr == "true" || valStr == "True" || valStr == "TRUE")
         return true;
-    else if (valStr == "false" || valStr == "False" || valStr == "FALSE")
+    if (valStr == "false" || valStr == "False" || valStr == "FALSE")
         return false;
-    else if (ofErrLog.is_open())
+    if (ofErrLog.is_open())
         ofErrLog << getReadingErrMsg(par, "[Bool]");
-    else
-    {
-        // "true" is 4 characters long
-        return par.getDefValStr().size() == 4ul;
-    }
+    // Fallback: "true" is 4 characters long
+    return par.getDefValStr().size() == 4ul;
 }
 
 template <typename T>
-void controlResource(Menu::ParametersContainer &parameters, std::string filepath, 
+void controlResource(Menu::ParametersContainer &parameters, std::string filepath,
     LogicalParameter::ID id, std::string collection)
 {
     if (filepath != "Default")
@@ -531,7 +531,8 @@ void controlResource(Menu::ParametersContainer &parameters, std::string filepath
         if (T resource; !resource.loadFromFile(filepath))
         {
             auto found = parameters.find(id);
-            assert(found != parameters.end());
+            if (found == parameters.end())
+                return;
             auto &parm = *found->second;
             ofErrLog << getReadingErrMsg(parm, collection);
             parm.resetToDefaultValue();
@@ -564,7 +565,7 @@ std::queue<LogKey> readKeys(const std::string &keysStr, const std::string &visua
     for (unsigned i = 0; strIdx1 < keysStr.size(); ++i)
     {
         std::string keyStr(keysStr, strIdx1, keysStr.substr(strIdx1).find(ConfigHelper::separationSign));
-        std::string visualKeyStr(visualKeysStr, strIdx2, visualKeysStr.substr(strIdx2).find(ConfigHelper::separationSign));   
+        std::string visualKeyStr(visualKeysStr, strIdx2, visualKeysStr.substr(strIdx2).find(ConfigHelper::separationSign));
         std::string checkStr;
         sf::Keyboard::Key key;
         sf::Mouse::Button button;
@@ -580,7 +581,7 @@ std::queue<LogKey> readKeys(const std::string &keysStr, const std::string &visua
             // Move index to the beggining of the next key
             strIdx1 = keysStr.find(ConfigHelper::separationSign, strIdx1) + len;
             strIdx2 = visualKeysStr.find(ConfigHelper::separationSign, strIdx2) + len;
-        } 
+        }
         else if (isKeyB)
         {
             key = strToKey(keyStr);
@@ -591,16 +592,15 @@ std::queue<LogKey> readKeys(const std::string &keysStr, const std::string &visua
             button = strToBtn(keyStr);
             checkStr = btnToStr(button);
         }
-            
+
         unsigned maxLength = 20u;
         if (visualKeyStr.size() > maxLength || visualKeyStr.size() == 0)
             visualKeyStr = checkStr;
 
-        // TODO remove *new LogKey, use smart ptrs instead
         if (isKeyB)
-            logKeysQueue.emplace(*new LogKey(keyStr, visualKeyStr, new sf::Keyboard::Key(key), nullptr));
+            logKeysQueue.emplace(keyStr, visualKeyStr, new sf::Keyboard::Key(key), nullptr);
         else
-            logKeysQueue.emplace(*new LogKey(keyStr, visualKeyStr, nullptr, new sf::Mouse::Button(button)));
+            logKeysQueue.emplace(keyStr, visualKeyStr, nullptr, new sf::Mouse::Button(button));
 
         logKeysQueue.back().realStr = checkStr == keyStr ? keyStr : checkStr;
 
@@ -619,9 +619,9 @@ std::queue<LogKey> readKeys(const std::string &keysStr, const std::string &visua
 std::queue<LogKey> oldReadKeys(const std::string &keysStr, const std::string &visualKeysStr)
 {
     std::queue<LogKey> logKeysQueue;
-    unsigned strIdx1 = 0u, strIdx2 = 0u;
+    std::size_t strIdx1 = 0u, strIdx2 = 0u;
 
-    for (unsigned i = 0u; strIdx1 < keysStr.size(); ++i)
+    for (std::size_t i = 0u; strIdx1 < keysStr.size(); ++i)
     {
         std::string keyStr(keysStr, strIdx1, keysStr.substr(strIdx1).find(','));
         std::string visualKeyStr(visualKeysStr, strIdx2, visualKeysStr.substr(strIdx2).find(','));
@@ -641,7 +641,7 @@ std::queue<LogKey> oldReadKeys(const std::string &keysStr, const std::string &vi
         if (visualKeyStr.size() > maxLength || visualKeyStr.size() == 0)
             visualKeyStr = checkStr;
 
-        logKeysQueue.emplace(*new LogKey(keyStr, visualKeyStr, new sf::Keyboard::Key(key), nullptr));
+        logKeysQueue.emplace(keyStr, visualKeyStr, new sf::Keyboard::Key(key), nullptr);
         logKeysQueue.back().realStr = checkStr == keyStr ? keyStr : checkStr;
 
         // If there is no data to read - break
@@ -659,9 +659,9 @@ std::queue<LogKey> oldReadKeys(const std::string &keysStr, const std::string &vi
 std::queue<LogKey> oldReadButtons(const std::string &buttonsStr, const std::string &visualButtonsStr)
 {
     std::queue<LogKey> logBtnQueue;
-    unsigned strIdx1 = 0, strIdx2 = 0;
+    std::size_t strIdx1 = 0, strIdx2 = 0;
 
-    for (unsigned i = 0; strIdx1 < buttonsStr.size(); ++i)
+    for (std::size_t i = 0; strIdx1 < buttonsStr.size(); ++i)
     {
         std::string buttonStr(buttonsStr, strIdx1, buttonsStr.substr(strIdx1).find(','));
         std::string visualButtonStr(visualButtonsStr, strIdx2, visualButtonsStr.substr(strIdx2).find(','));
@@ -674,7 +674,7 @@ std::queue<LogKey> oldReadButtons(const std::string &buttonsStr, const std::stri
         if (visualButtonStr.size() > maxLength || visualButtonStr.size() == 0)
             visualButtonStr = checkStr;
 
-        logBtnQueue.emplace(*new LogKey(buttonStr, visualButtonStr, nullptr, new sf::Mouse::Button(button)));
+        logBtnQueue.emplace(buttonStr, visualButtonStr, nullptr, new sf::Mouse::Button(button));
         logBtnQueue.back().realStr = checkStr == buttonStr ? buttonStr : checkStr;
 
         // If there is no data to read - break
@@ -693,13 +693,13 @@ void saveConfig(
     const Menu::ParametersContainer &parameters, const Menu::ParameterLinesContainer &parameterLines,
     const std::vector<std::unique_ptr<Button>> *mKeys, bool saveKeys)
 {
-    ofCfg.open(tmpCfgPath);
+    std::ofstream ofCfg(tmpCfgPath);
 
     ofCfg << defCfgComment;
     ofCfg << "\n";
 
     if (saveKeys)
-    {    
+    {
         ofCfg << "[Real keys]\nReal keys: " << getKeysStr(*mKeys, true);
         ofCfg << "[Visual keys]\nVisual keys: " << getKeysStr(*mKeys, false);
     }
@@ -724,17 +724,17 @@ void saveConfig(
             mainParP = parP;
             ++parmPair; ++parmLinePair;
         }
-        
+
         // Write Empty or Collection first, since any collection doesn't end up with a String
         if (parmLinePair != parameterLines.end()
-        && (parP2->mType == LogicalParameter::Type::Empty 
+        && (parP2->mType == LogicalParameter::Type::Empty
         ||  parP2->mType == LogicalParameter::Type::Collection
         ||  parP2->mType == LogicalParameter::Type::Hint))
         {
             mainParP = parP2;
             ++parmLinePair;
-        } 
-        else if (parmPair != parameters.end() && parP != parP2) 
+        }
+        else if (parmPair != parameters.end() && parP != parP2)
         {
             mainParP = parP;
             ++parmPair;
@@ -743,7 +743,7 @@ void saveConfig(
         if (commentsSection)
             ofCfg << "# ";
         ofCfg << mainParP->mParName;
-        if (mainParP->mType != LogicalParameter::Type::Empty 
+        if (mainParP->mType != LogicalParameter::Type::Empty
         &&  mainParP->mType != LogicalParameter::Type::Collection
         &&  mainParP->mType != LogicalParameter::Type::Hint)
             ofCfg << ": " << mainParP->getValStr();
@@ -759,10 +759,10 @@ void saveConfig(
     if (ofCfgCheck.is_open())
     {
         ofCfgCheck.close();
-        remove(cfgPath.c_str());
+        std::filesystem::remove(cfgPath);
     }
 
-    rename(tmpCfgPath.c_str(), cfgPath.c_str());
+    std::filesystem::rename(tmpCfgPath, cfgPath);
 }
 
 std::string getKeysStr(const std::vector<std::unique_ptr<Button>> &mKeys, bool readRealStr)
@@ -813,7 +813,7 @@ ParameterPath getOldParName(ParameterPath parPath)
         // UP TO DATE
         // else if (parPath.name == "Fixed position on value variation")
         // newPath.name = 		 "";
-            
+
         else if (parPath.name == "Font filepath")
             newPath.name =       "Statistics text font";
 
@@ -863,7 +863,7 @@ ParameterPath getOldParName(ParameterPath parPath)
         // UP TO DATE
         // else if (parPath.name == "KPS fixed position on value variation")
         //     newPath.name = 		 "";
-            
+
         else if (parPath.name == "KPS text color")
             newPath.name = 		 "Statistics KPS text color";
 
@@ -941,8 +941,8 @@ ParameterPath getOldParName(ParameterPath parPath)
 
     else if (parPath.collection == "[Statistics text strings]")
     {
-        if (parPath.name == "KPS text" 
-        ||  parPath.name == "Total text" 
+        if (parPath.name == "KPS text"
+        ||  parPath.name == "Total text"
         ||  parPath.name == "BPM text")
         {
             newPath.collection = "[Statistics text advanced settings]";
@@ -952,7 +952,7 @@ ParameterPath getOldParName(ParameterPath parPath)
         {
             newPath.name = "KPS text when it is 0";
             newPath.collection = "[Statistics text advanced settings]";
-        }        
+        }
     }
 
 
@@ -981,7 +981,7 @@ ParameterPath getOldParName(ParameterPath parPath)
 
         else if (parPath.name == "Text bounds")
             newPath.name = 		 "Buttons text bounds";
-        
+
         // UP TO DATE
         // else if (parPath.name == "Ignore button movement")
         //     newPath.name = 		 "";
@@ -1099,7 +1099,7 @@ ParameterPath getOldParName(ParameterPath parPath)
         //     newPath.name = 		 "";
 
         // v0.2< supported only 15 keys, not 20
-        else if (const auto n = Utility::retrieveNumber(parPath.name, "@. Position offset"); 
+        else if (const auto n = Utility::retrieveNumber(parPath.name, "@. Position offset");
             n != -1 && n <= static_cast<int>(Settings::OldSupportedAdvancedKeysNumber))
         {
             newPath.name = "Button text " + std::to_string(n) + " position";
@@ -1127,21 +1127,21 @@ ParameterPath getOldParName(ParameterPath parPath)
     {
         if (parPath.name == "Enable advanced mode for button graphics")
             newPath.name = 	"Enable advanced mode for button positions";
-        
+
         // v0.2< supported only 15 keys, not 20
-        else if (const auto n = Utility::retrieveNumber(parPath.name, "@. Position offset"); 
+        else if (const auto n = Utility::retrieveNumber(parPath.name, "@. Position offset");
             n != -1 && n <= static_cast<int>(Settings::OldSupportedAdvancedKeysNumber))
         {
             newPath.name = "Button " + std::to_string(n) + " position offset";
         }
-        else if (const auto n = Utility::retrieveNumber(parPath.name, "Button @ position offset"); 
+        else if (const auto n = Utility::retrieveNumber(parPath.name, "Button @ position offset");
             n != -1 && n <= static_cast<int>(Settings::OldSupportedAdvancedKeysNumber))
         {
             newPath.name = "Button " + std::to_string(n) + " position";
         }
 
         // v0.2< supported only 15 keys, not 20
-        else if (const auto n = Utility::retrieveNumber(parPath.name, "@. Size"); 
+        else if (const auto n = Utility::retrieveNumber(parPath.name, "@. Size");
             n != -1 && n <= static_cast<int>(Settings::OldSupportedAdvancedKeysNumber))
         {
             newPath.name = "Button " + std::to_string(n) + " size";
@@ -1278,7 +1278,7 @@ ParameterPath getOldParName(ParameterPath parPath)
     {
         if (parPath.name == "Spawn position offset")
             newPath.name = 	"Origin";
-            
+
         // UP TO DATE
         // if (parPath.name == "Enabled")
         //     newPath.name = 		 "";

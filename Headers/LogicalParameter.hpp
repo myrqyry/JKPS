@@ -342,6 +342,8 @@ struct LogicalParameter
             BtnGfxTxtr,
             BtnGfxTxtrSz,
             BtnGfxTxtrClr,
+            BtnGfxBorderClr,
+            BtnGfxShape,
 
             BtnGfxAdvMode,
             BtnGfxBtnPos1,
@@ -418,6 +420,7 @@ struct LogicalParameter
             BgClr,
             BgScale,
             MainWndwTitleBar,
+            MainWndwResizable,
 			RenderUpdateFrequency,
             MainWndwTop,
             MainWndwBot,
@@ -695,15 +698,15 @@ void LogicalParameter::setDigit(T var)
     switch(mType)
     {
 		case Type::Unsigned: 
-			*mVal.uP = clamp<unsigned>(var, mLowLimits, mHighLimits);
+			*mVal.uP = static_cast<unsigned>(clamp<float>(static_cast<float>(var), mLowLimits, mHighLimits));
 			mValStr = std::to_string(static_cast<int>(*mVal.uP));
 			break;
         case Type::Int: 
-			*mVal.iP = clamp<int>(var, mLowLimits, mHighLimits);
+			*mVal.iP = static_cast<int>(clamp<float>(static_cast<float>(var), mLowLimits, mHighLimits));
 			mValStr = std::to_string(static_cast<int>(*mVal.iP));
 			break;
         case Type::Float: 
-			*mVal.fP = clamp<float>(var, mLowLimits, mHighLimits);
+			*mVal.fP = clamp<float>(static_cast<float>(var), mLowLimits, mHighLimits);
 			mValStr = std::to_string(static_cast<int>(*mVal.fP)); /*+ 1 dec digit*/
 			break;
         
@@ -719,8 +722,8 @@ void LogicalParameter::setVector(T vec)
 
     switch(mType)
     {
-        case Type::VectorU: mVal.vUp->x = vec.x; mVal.vUp->y = vec.y; break;
-        case Type::VectorI: mVal.vIp->x = vec.x; mVal.vIp->y = vec.y; break;
+        case Type::VectorU: mVal.vUp->x = static_cast<unsigned>(vec.x); mVal.vUp->y = static_cast<unsigned>(vec.y); break;
+        case Type::VectorI: mVal.vIp->x = static_cast<int>(vec.x); mVal.vIp->y = static_cast<int>(vec.y); break;
         case Type::VectorF: mVal.vFp->x = vec.x; mVal.vFp->y = vec.y; break;
 
         default: break;
@@ -737,13 +740,12 @@ T LogicalParameter::getDigit() const
 
     switch(mType)
     {
-        case Type::Unsigned: return *mVal.uP;
-        case Type::Int: return *mVal.iP;
-        case Type::Bool: return *mVal.bP;
-        case Type::Float: return *mVal.fP;
+        case Type::Unsigned: return static_cast<T>(*mVal.uP);
+        case Type::Int: return static_cast<T>(*mVal.iP);
+        case Type::Bool: return static_cast<T>(*mVal.bP);
+        case Type::Float: return static_cast<T>(*mVal.fP);
+        default: return T{};
     }
-
-    return T(-1);
 }
 
 template <typename T>

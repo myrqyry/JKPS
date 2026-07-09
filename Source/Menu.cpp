@@ -60,8 +60,8 @@ void Menu::handleEvent()
             mTabs[mSelectedTab]->mRect.setFillColor(GfxParameter::defaultRectColor);
 
             // Select new tab
-            selectTab(index);
-            mSelectedTab = index;
+            selectTab(static_cast<unsigned>(index));
+            mSelectedTab = static_cast<unsigned>(index);
 
             mTabs[index]->mRect.setFillColor(GfxParameter::defaultSelectedRectColor);
         };
@@ -315,13 +315,15 @@ void Menu::openWindow()
     sf::Uint32 style;
 #ifdef _WIN32
     style = sf::Style::Close;
-#elif linux
+#elif __linux__
     style = sf::Style::Default;
 #else
 #error Unsupported compiler
 #endif
 
-    mWindow.create(sf::VideoMode(959, 700), "JKPS Menu", style);
+    sf::ContextSettings settings;
+    settings.antialiasingLevel = 8;
+    mWindow.create(sf::VideoMode(959, 700), "JKPS Menu", style, settings);
     mView = mWindow.getView();
     selectTab(mSelectedTab);
     mSliderBar.setPosition(mSliderBar.getPosition().x, mSliderBar.getSize().y / 2);
@@ -639,6 +641,8 @@ void Menu::buildParametersMap()
     mParameters.emplace(std::make_pair(LogicalParameter::ID::BtnGfxTxtr,                  new LogicalParameter(LogicalParameter::Type::StringPath,    &Settings::GfxButtonTexturePath,                        "Texture filepath", "Default")));
     mParameters.emplace(std::make_pair(LogicalParameter::ID::BtnGfxTxtrSz,                new LogicalParameter(LogicalParameter::Type::VectorU,       &Settings::GfxButtonTextureSize,                        "Texture size", "50,50", 0, 500)));
     mParameters.emplace(std::make_pair(LogicalParameter::ID::BtnGfxTxtrClr,               new LogicalParameter(LogicalParameter::Type::Color,         &Settings::GfxButtonTextureColor,                       "Texture color", "30,30,30,255")));
+    mParameters.emplace(std::make_pair(LogicalParameter::ID::BtnGfxBorderClr,             new LogicalParameter(LogicalParameter::Type::Color,         &Settings::GfxButtonBorderColor,                        "Border color", "120,180,255,255")));
+    mParameters.emplace(std::make_pair(LogicalParameter::ID::BtnGfxShape,                 new LogicalParameter(LogicalParameter::Type::Int,           &Settings::ButtonShape,                                 "Button shape", "0", 0, 6)));
 
     mParameters.emplace(std::make_pair(LogicalParameter::ID::BtnGfxAdvMode,               new LogicalParameter(LogicalParameter::Type::Bool,          &Settings::GfxButtonAdvancedMode,                       "Enable advanced mode for button graphics", "False")));
     for (auto i = 0ul; i < Settings::SupportedAdvancedKeysNumber; ++i)
@@ -668,6 +672,7 @@ void Menu::buildParametersMap()
     mParameters.emplace(std::make_pair(LogicalParameter::ID::BgClr,                       new LogicalParameter(LogicalParameter::Type::Color,         &Settings::BackgroundColor,                             "Background color", "140,140,140,255")));
     mParameters.emplace(std::make_pair(LogicalParameter::ID::BgScale,                     new LogicalParameter(LogicalParameter::Type::Bool,          &Settings::ScaleBackground,                             "Scale background texture if it does not fit", "True")));
 	mParameters.emplace(std::make_pair(LogicalParameter::ID::MainWndwTitleBar,            new LogicalParameter(LogicalParameter::Type::Bool,          &Settings::WindowTitleBar,                              "Title bar", "False")));
+	mParameters.emplace(std::make_pair(LogicalParameter::ID::MainWndwResizable,           new LogicalParameter(LogicalParameter::Type::Bool,          &Settings::WindowResizable,                             "Window resizable", "True")));
 	mParameters.emplace(std::make_pair(LogicalParameter::ID::RenderUpdateFrequency,       new LogicalParameter(LogicalParameter::Type::Unsigned,      &Settings::RenderUpdateFrequency,                       "Render update frequency", "120", 10, 1000)));
     mParameters.emplace(std::make_pair(LogicalParameter::ID::MainWndwTop,                 new LogicalParameter(LogicalParameter::Type::Int,           &Settings::WindowBonusSizeTop,                          "Bonus size top", "6", -10000, 10000)));
     mParameters.emplace(std::make_pair(LogicalParameter::ID::MainWndwBot,                 new LogicalParameter(LogicalParameter::Type::Int,           &Settings::WindowBonusSizeBottom,                       "Bonus size bottom", "6", -10000, 10000)));
@@ -721,12 +726,12 @@ void Menu::buildParametersMap()
     mParameters.emplace(std::make_pair(LogicalParameter::ID::OtherShowOppOnAlt,           new LogicalParameter(LogicalParameter::Type::Bool,          &Settings::ShowOppOnAlt,                                "Show opposite key values on alt press", "True")));
     mParameters.emplace(std::make_pair(LogicalParameter::ID::OtherMultpl,                 new LogicalParameter(LogicalParameter::Type::Unsigned,      &Settings::ButtonPressMultiplier,                       "Value to multiply on click", "1", 0, 1000000)));
 
-    mParameters.emplace(std::make_pair(LogicalParameter::ID::SaveStatMaxKPS,              new LogicalParameter(LogicalParameter::Type::Float,         &Settings::MaxKPS,                                      "Saved max KPS", "0", 0u, INT_MAX)));
-    mParameters.emplace(std::make_pair(LogicalParameter::ID::SaveStatTotal,               new LogicalParameter(LogicalParameter::Type::Unsigned,      &Settings::Total,                                       "Saved total", "0", 0u, INT_MAX)));
+    mParameters.emplace(std::make_pair(LogicalParameter::ID::SaveStatMaxKPS,              new LogicalParameter(LogicalParameter::Type::Float,         &Settings::MaxKPS,                                      "Saved max KPS", "0", 0u, static_cast<float>(INT_MAX))));
+    mParameters.emplace(std::make_pair(LogicalParameter::ID::SaveStatTotal,               new LogicalParameter(LogicalParameter::Type::Unsigned,      &Settings::Total,                                       "Saved total", "0", 0u, static_cast<float>(INT_MAX))));
     for (auto i = 0ul; i < Settings::SupportedAdvancedKeysNumber; ++i)
     {
         auto id =                      LogicalParameter::ID(unsigned(LogicalParameter::ID::SaveStatTotal1) + i);
-        mParameters.emplace(std::make_pair(id,                                            new LogicalParameter(LogicalParameter::Type::Unsigned,      &Settings::KeysTotal[i],                                "Saved total " + std::to_string(i + 1), "0", 0, INT_MAX)));
+        mParameters.emplace(std::make_pair(id,                                            new LogicalParameter(LogicalParameter::Type::Unsigned,      &Settings::KeysTotal[i],                                "Saved total " + std::to_string(i + 1), "0", 0, static_cast<float>(INT_MAX))));
     }
 }
 
@@ -886,7 +891,7 @@ void Menu::positionMenuLines()
                 mParameterLines.at(ParameterLine::ID::ProgramVersion)
                     ->move(0.f, halfWindowSize - step.y * 3.f + padding);
             }
-            mBounds.push_back(step.y * (row - 2u) - halfWindowSize + padding);
+            mBounds.push_back(step.y * (static_cast<float>(row) - 2.f) - halfWindowSize + padding);
             row = 0u;
             ++column;
         }
@@ -923,11 +928,11 @@ void Menu::moveSliderBarButtons(float offset)
     const sf::Vector2f sliberbarPosition = mSliderBar.getPosition();
     const sf::Vector2u windowSize = mWindow.getSize();
     const float highBounds = sliderbarSize.y / 2;
-    const float lowBounds = mWindow.getSize().y - sliderbarSize.y / 2.f;
+    const float lowBounds = static_cast<float>(mWindow.getSize().y) - sliderbarSize.y / 2.f;
 
     const float normilizedOffset = offset / mBounds[mSelectedTab] / 1.5f;
-    const float normilizedCursorPosition = sliberbarPosition.y / windowSize.y;
-    float projectedSliderbarPositionY = windowSize.y * (normilizedCursorPosition + normilizedOffset);
+    const float normilizedCursorPosition = sliberbarPosition.y / static_cast<float>(windowSize.y);
+    float projectedSliderbarPositionY = static_cast<float>(windowSize.y) * (normilizedCursorPosition + normilizedOffset);
 
     if (projectedSliderbarPositionY < highBounds)
         projectedSliderbarPositionY = highBounds;
@@ -953,15 +958,15 @@ void Menu::moveSliderBarMouse(sf::Vector2i mousePos)
         
     const sf::Vector2f sliderbarSize = mSliderBar.getSize();
     const float highBounds = sliderbarSize.y / 2;
-    const float lowBounds = mWindow.getSize().y - sliderbarSize.y / 2;
-    if (mousePos.y < highBounds)
-        mousePos.y = highBounds;
-    if (mousePos.y > lowBounds)
-        mousePos.y = lowBounds;
+    const float lowBounds = static_cast<float>(mWindow.getSize().y) - sliderbarSize.y / 2;
+    if (static_cast<float>(mousePos.y) < highBounds)
+        mousePos.y = static_cast<int>(highBounds);
+    if (static_cast<float>(mousePos.y) > lowBounds)
+        mousePos.y = static_cast<int>(lowBounds);
 
     const float sliderbarX = mSliderBar.getPosition().x;
-    const float sliderbarY = mousePos.y;
-    const float virtualWindowHeight = mWindow.getSize().y - sliderbarSize.y;
+    const float sliderbarY = static_cast<float>(mousePos.y);
+    const float virtualWindowHeight = static_cast<float>(mWindow.getSize().y) - sliderbarSize.y;
     const float virtualCursorPositionY = sliderbarY - sliderbarSize.y / 2.f;
     const float normilizedViewHeight = virtualCursorPositionY / virtualWindowHeight;
 
@@ -1115,5 +1120,14 @@ void Menu::KeyBlock::handleEvent(sf::Event event, sf::Vector2f absCursorPos)
 
         elem->mRect.setFillColor(color);
         ++idx;
+    }
+}
+
+void Menu::reloadConfig()
+{
+    ConfigHelper::readConfig(mParameters, mCollectionNames);
+    for (const auto &pair : mParameters)
+    {
+        mChangedParametersQueue.push(pair);
     }
 }

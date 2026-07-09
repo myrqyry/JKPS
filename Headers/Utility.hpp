@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string_view>
+#include <vector>
+#include <string>
 
 namespace sf
 {
@@ -17,4 +19,6 @@ namespace Utility
 
     // Does not read numbers with a sign in front of it
     int retrieveNumber(std::string_view str, std::string_view templ);
+
+    std::vector<std::string> split(const std::string &str, char delimiter);
 } // namespace Utility

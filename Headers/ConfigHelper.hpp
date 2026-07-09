@@ -12,13 +12,14 @@
 #include <vector>
 #include <queue>
 #include <map>
+#include <unordered_map>
 
 
 namespace ConfigHelper
 {
 
 extern const std::string separationSign;
-    
+
 bool readConfig(Menu::ParametersContainer &parameters, const std::vector<std::string> &collectionNames);
 void readParameters(Menu::ParametersContainer &parameters, const std::vector<std::string> &collectionNames);
 std::queue<LogKey> getLogKeys();
@@ -35,6 +36,9 @@ void controlAssets(Menu::ParametersContainer &parameters);
 std::queue<LogKey> readKeys(const std::string &keysStr, const std::string &visualKeysStr);
 std::queue<LogKey> oldReadKeys(const std::string &keysStr, const std::string &visualKeysStr);
 std::queue<LogKey> oldReadButtons(const std::string &valStr, const std::string &visualValStr);
+
+void clearConfigCacheImpl();
+std::string scanParameterValueCached(const std::string &parName, bool &isParamFound, bool &isValueNull, const std::string &collection);
 
 void createDefaultConfig();
 void saveConfig(

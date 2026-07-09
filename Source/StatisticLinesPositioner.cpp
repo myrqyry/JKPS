@@ -18,7 +18,7 @@ float StatisticsPositioner::getTotalHeight()
     }
     if (totalLinesHeight > 0.f)
         totalLinesHeight -= Settings::StatisticsTextDistance;
-    
+
     return totalLinesHeight;
 }
 
@@ -28,9 +28,9 @@ void StatisticsPositioner::operator()()
 
     const auto advMode = Settings::StatisticsTextAdvancedMode;
 
-    const auto width = Settings::StatisticsTextPosition.x + Application::getWindowWidth() - Settings::WindowBonusSizeRight;
+    const auto width = static_cast<float>(Settings::StatisticsTextPosition.x) + static_cast<float>(Application::getWindowWidth()) - static_cast<float>(Settings::WindowBonusSizeRight);
     const auto totalHeight = getTotalHeight();
-    const auto startHeight = Settings::WindowBonusSizeTop + Settings::GfxButtonTextureSize.y / 2.f - totalHeight / 2.f - Settings::StatisticsTextPosition.y;
+    const auto startHeight = static_cast<float>(Settings::WindowBonusSizeTop) + static_cast<float>(Settings::GfxButtonTextureSize.y) / 2.f - totalHeight / 2.f - static_cast<float>(Settings::StatisticsTextPosition.y);
     auto currentHeight = 0.f;
 
     auto idx = 0u;

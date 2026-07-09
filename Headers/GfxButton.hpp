@@ -5,6 +5,8 @@
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Text.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
+#include <SFML/Graphics/ConvexShape.hpp>
+#include <SFML/Graphics/CircleShape.hpp>
 
 #include "ResourceIdentifiers.hpp"
 
@@ -34,7 +36,7 @@ class GfxButton : public sf::Drawable, public sf::Transformable
             TextIdCounter,
             Nothing
         };
-        
+
         // Enhanced press animation states
         enum PressState
         {
@@ -62,7 +64,7 @@ class GfxButton : public sf::Drawable, public sf::Transformable
         virtual ~GfxButton();
 
 
-protected:
+    protected:
         // Enhanced press animation system
         struct PressAnimation
         {
@@ -72,43 +74,10 @@ protected:
             float time;
             PressState state;
         };
-        
+
         // Theme integration structure
         struct ThemeColors
         {
-            sf::Color normalBorder;
-            sf::Color pressedBorder;
-            sf::Color shadow;
-            sf::Color pressColor;
-            sf::Color gradientTop;
-            sf::Color gradientBottom;
-        };
-        
-        // Responsive sizing structure
-        struct ResponsiveSize
-        {
-            float baseWidth;
-            float baseHeight;
-            float scaleFactor;
-            float minScale;
-            float maxScale;
-        };
-        
-        // Enhanced key visualizer styling
-        struct KeyVisualizerStyle
-        {
-            sf::Color backgroundColor;
-            sf::Color borderColor;
-            sf::Color textColor;
-            float cornerRadius;
-            float shadowIntensity;
-            bool themeAware;
-        };
-
-        // Theme management
-        struct ThemeInfo
-        {
-            std::string themeName;
             sf::Color normalBorder;
             sf::Color pressedBorder;
             sf::Color shadow;
@@ -117,45 +86,6 @@ protected:
             sf::Color gradientBottom;
         };
 
-        // Enhanced styling functions
-        void applyEnhancedButtonStyling(unsigned idx, bool advGfxMode, bool advTextMode, bool sepValAdvMode);
-        void applyEnhancedGradientToSprite(std::unique_ptr<sf::Sprite> &sprite, const sf::Color &baseColor, bool advMode, unsigned idx);
-        void applyEnhancedPressBorder(std::unique_ptr<sf::Sprite> &sprite, const sf::Color &borderColor, const sf::Color &shadowColor, const sf::Color &pressColor, bool advMode, unsigned idx);
-        void applyEnhancedScaling(unsigned idx, bool advMode);
-        void applyEnhancedGradientOverlay(std::unique_ptr<sf::Sprite> &sprite, const sf::Color &pressColor, unsigned idx);
-        
-        // Enhanced gradient and color functions
-        EnhancedGradientColors getEnhancedGradientColors(unsigned idx) const;
-        GradientColors getEnhancedOverlayButtonColor(unsigned idx, bool advMode);
-        sf::Color getEnhancedButtonBorderColor(unsigned idx, bool advMode);
-        sf::Color getEnhancedShadowColor(unsigned idx);
-        sf::Color getEnhancedPressColor(unsigned idx, bool advMode);
-        
-        // Responsive sizing functions
-        void applyResponsiveScaling(unsigned idx, float &baseScale, float &animationScale);
-        void applyResponsiveTextScaling(unsigned idx);
-        float getEnvironmentScaleFactor();
-        float getWindowContentScale();
-        
-        // Theme integration functions
-        void applyThemeBasedGradient(std::unique_ptr<sf::Sprite> &sprite, const sf::Color &pressColor, unsigned idx);
-        ThemeInfo getCurrentTheme();
-        void initializeThemeSystem();
-        
-        // Global theme storage
-        static std::vector<ThemeInfo> settingsThemes;
-        
-        // Theme integration structure
-        struct ThemeColors
-        {
-            sf::Color normalBorder;
-            sf::Color pressedBorder;
-            sf::Color shadow;
-            sf::Color pressColor;
-            sf::Color gradientTop;
-            sf::Color gradientBottom;
-        };
-        
         // Responsive sizing structure
         struct ResponsiveSize
         {
@@ -165,39 +95,7 @@ protected:
             float minScale;
             float maxScale;
         };
-        
-        // Enhanced key visualizer styling
-        struct KeyVisualizerStyle
-        {
-            sf::Color backgroundColor;
-            sf::Color borderColor;
-            sf::Color textColor;
-            float cornerRadius;
-            float shadowIntensity;
-            bool themeAware;
-        };
-        
-        // Theme integration structure
-        struct ThemeColors
-        {
-            sf::Color normalBorder;
-            sf::Color pressedBorder;
-            sf::Color shadow;
-            sf::Color pressColor;
-            sf::Color gradientTop;
-            sf::Color gradientBottom;
-        };
-        
-        // Responsive sizing structure
-        struct ResponsiveSize
-        {
-            float baseWidth;
-            float baseHeight;
-            float scaleFactor;
-            float minScale;
-            float maxScale;
-        };
-        
+
         // Enhanced key visualizer styling
         struct KeyVisualizerStyle
         {
@@ -236,27 +134,35 @@ protected:
         void applyEnhancedPressBorder(std::unique_ptr<sf::Sprite> &sprite, const sf::Color &borderColor, const sf::Color &shadowColor, const sf::Color &pressColor, bool advMode, unsigned idx);
         void applyEnhancedScaling(unsigned idx, bool advMode);
         void applyEnhancedGradientOverlay(std::unique_ptr<sf::Sprite> &sprite, const sf::Color &pressColor, unsigned idx);
-        
+
         // Enhanced gradient and color functions
         EnhancedGradientColors getEnhancedGradientColors(unsigned idx) const;
-        GradientColors getEnhancedOverlayButtonColor(unsigned idx, bool advMode);
+        sf::Color getEnhancedOverlayButtonColor(unsigned idx, bool advMode);
         sf::Color getEnhancedButtonBorderColor(unsigned idx, bool advMode);
         sf::Color getEnhancedShadowColor(unsigned idx);
         sf::Color getEnhancedPressColor(unsigned idx, bool advMode);
-        
+
         // Responsive sizing functions
         void applyResponsiveScaling(unsigned idx, float &baseScale, float &animationScale);
         void applyResponsiveTextScaling(unsigned idx);
         float getEnvironmentScaleFactor();
         float getWindowContentScale();
-        
+
         // Theme integration functions
         void applyThemeBasedGradient(std::unique_ptr<sf::Sprite> &sprite, const sf::Color &pressColor, unsigned idx);
         ThemeInfo getCurrentTheme();
         void initializeThemeSystem();
-        
+
         // Global theme storage
         static std::vector<ThemeInfo> settingsThemes;
+
+    protected:
+        void keepInBounds(sf::Text &text);
+        void centerOrigins();
+        void drawVectorShape(sf::RenderTarget &target, sf::RenderStates states, int shape, sf::Vector2f position, sf::Vector2f size, sf::Color fillColor, sf::Color outlineColor) const;
+
+
+    private:
         void resetAssets();
         void scaleSprites();
 

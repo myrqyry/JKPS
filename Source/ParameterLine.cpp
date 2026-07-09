@@ -107,7 +107,7 @@ bool ParameterLine::handleValueModEvent(sf::Event event)
             {
                 if (mParameterValues[i] == mSelectedValue)
                 {
-                    btnIdx = i;
+                    btnIdx = static_cast<int>(i);
                     break;
                 }
             }
@@ -132,14 +132,14 @@ bool ParameterLine::handleValueModEvent(sf::Event event)
             const auto strSize = str.size();
             if ((strSize == 1ul && str[0] == '0') || (strSize == 2ul && !std::isdigit(str[0]) && str[1] == '0'))
             {
-                str.back() = n + '0';
-                if (mSelectedValueIndex == strSize - 1ul)
+                str.back() = static_cast<char>(n + '0');
+                if (mSelectedValueIndex == static_cast<int>(strSize - 1ul))
                     ++mSelectedValueIndex;
             }
             else
             {
                 const auto prevVal = str;
-                addChOnIdx(str, mSelectedValueIndex, n + '0');
+                addChOnIdx(str, static_cast<unsigned>(mSelectedValueIndex), static_cast<char>(n + '0'));
                 const auto check = stof(str); 
                 str = std::to_string(static_cast<int>(check));
 
@@ -212,7 +212,7 @@ bool ParameterLine::handleValueModEvent(sf::Event event)
                 }
                 else
                 {
-                    rmChOnIdx(str, mSelectedValueIndex - 1);
+                    rmChOnIdx(str, static_cast<unsigned>(mSelectedValueIndex - 1));
                     if (!isStrType && std::stoi(str) == 0)
                     {
                         // ex.: -500, remove 5, result "-0", if 500, then "0"
@@ -228,7 +228,7 @@ bool ParameterLine::handleValueModEvent(sf::Event event)
         {
             const auto strSize = str.size();
 
-            if (strSize > mSelectedValueIndex)
+            if (static_cast<int>(strSize) > mSelectedValueIndex)
             {
                 // "0" or "-0"
                 if ((!isStrType && strSize == 1) 
@@ -239,7 +239,7 @@ bool ParameterLine::handleValueModEvent(sf::Event event)
                 }
                 else
                 {
-                    rmChOnIdx(str, mSelectedValueIndex);
+                    rmChOnIdx(str, static_cast<unsigned>(mSelectedValueIndex));
                     if (!isStrType && std::stoi(str) == 0)
                     {
                         // ex.: -500, remove 5, result "-0", if 500, then "0"
@@ -257,7 +257,7 @@ bool ParameterLine::handleValueModEvent(sf::Event event)
         }
 		else if (keyCode == sf::Keyboard::Right)
         {
-            if (str.size() > mSelectedValueIndex)
+            if (static_cast<int>(str.size()) > mSelectedValueIndex)
                 ++mSelectedValueIndex;
         }
         else if (keyCode == sf::Keyboard::Home)
@@ -266,7 +266,7 @@ bool ParameterLine::handleValueModEvent(sf::Event event)
         }
         else if (keyCode == sf::Keyboard::End)
         {
-            mSelectedValueIndex = str.size();
+            mSelectedValueIndex = static_cast<int>(str.size());
         }
 
         if (isStrType && GfxButtonSelector::isCharacter(keyCode))
@@ -289,7 +289,7 @@ bool ParameterLine::handleValueModEvent(sf::Event event)
             {
                 if (maxLength >= str.length())
                 {
-                    addChOnIdx(str, mSelectedValueIndex, enumKeyToStr(keyCode));
+                    addChOnIdx(str, static_cast<unsigned>(mSelectedValueIndex), enumKeyToStr(keyCode));
                     ++mSelectedValueIndex;
                 }
             }
@@ -299,17 +299,17 @@ bool ParameterLine::handleValueModEvent(sf::Event event)
 		{
 			// This is a dirty hack; we set the value string to the parameter so that it clamps it, 
 			// and then we read it whatever it clamped
-			const int prevLen = str.length();
-			mParameter->setValStr(str, btnIdx);
+			const int prevLen = static_cast<int>(str.length());
+			mParameter->setValStr(str, static_cast<unsigned>(btnIdx));
 			ConfigHelper::readDigitParameter(*mParameter, str);
-			const int newLen = str.length();
+			const int newLen = static_cast<int>(str.length());
 			if (newLen != prevLen)
 			{
 				mSelectedValueIndex++;
 			}
 		}
 
-        mParameter->setValStr(str, btnIdx);
+        mParameter->setValStr(str, static_cast<unsigned>(btnIdx));
         mSelectedValue->mValText.setString(str);
         paramValWasChanged = true;
 
@@ -437,7 +437,7 @@ bool ParameterLine::tabulation()
     return false;
 }
 
-bool ParameterLine::selectRgbCircle(sf::Mouse::Button button, sf::Vector2f mousePos)
+bool ParameterLine::selectRgbCircle(sf::Mouse::Button /*button*/, sf::Vector2f mousePos)
 {
     const auto circleOrigin = mColorButtonP->getOrigin();
     const auto circlePosition = mColorButtonP->getPosition();
@@ -532,7 +532,7 @@ void ParameterLine::buildButtons(const std::string &valueStr, const FontHolder &
     const auto count = readAmountOfParms(valueStr);
     for (auto i = 0ul; i < count; ++i)
     {
-        val = std::make_shared<GfxParameter>(this, readValue(valueStr, i), i);
+        val = std::make_shared<GfxParameter>(this, readValue(valueStr, static_cast<unsigned>(i)), static_cast<unsigned>(i));
 
         val->setPosition(val->getPosition() + sf::Vector2f(mRectLine.getSize().x - 
             GfxParameter::getPosX(), mRectLine.getSize().y / 2));
@@ -569,7 +569,7 @@ void ParameterLine::select(std::shared_ptr<GfxParameter> ptr)
     mSelectedParameter = mParameter;
     mSelectedLine = shared_from_this();
     mSelectedValue->mRect.setFillColor(GfxParameter::defaultSelectedRectColor);
-    mSelectedValueIndex = mSelectedValue->mValText.getString().getSize();
+    mSelectedValueIndex = static_cast<int>(mSelectedValue->mValText.getString().getSize());
     setCursorPos();
 
     const auto &parName = mSelectedParameter->mParName;
@@ -628,7 +628,7 @@ void ParameterLine::setCursorPos()
     // and multiply by current cursor index - the cursor is on the index left
     const auto x = mSelectedValue->getPosition().x - mSelectedValue->mRect.getSize().x / 2 + 
         (mSelectedValue->mRect.getSize().x - mSelectedValue->mValText.getLocalBounds().width) / 2 +
-        mSelectedValueIndex * (chSz.x - text.getLetterSpacing() * 2);
+        static_cast<float>(mSelectedValueIndex) * (chSz.x - text.getLetterSpacing() * 2);
     const auto y = mCursor.getPosition().y;
 
     mCursor.setPosition(x, y);
@@ -768,7 +768,7 @@ void ParameterLine::setColor(sf::Color color)
         {
             if (elem == mSelectedValue)
             {
-                mSelectedValueIndex = elem->mValText.getString().getSize();
+                mSelectedValueIndex = static_cast<int>(elem->mValText.getString().getSize());
                 setCursorPos();
             }
         }
@@ -1174,6 +1174,8 @@ ParameterLine::ID ParameterLine::parIdToParLineId(LogicalParameter::ID id)
         case LogicalParameter::ID::BtnGfxTxtr: return ParameterLine::ID::BtnGfxTxtr;
         case LogicalParameter::ID::BtnGfxTxtrSz: return ParameterLine::ID::BtnGfxTxtrSz;
         case LogicalParameter::ID::BtnGfxTxtrClr: return ParameterLine::ID::BtnGfxTxtrClr;
+        case LogicalParameter::ID::BtnGfxBorderClr: return ParameterLine::ID::BtnGfxBorderClr;
+        case LogicalParameter::ID::BtnGfxShape: return ParameterLine::ID::BtnGfxShape;
         
         case LogicalParameter::ID::BtnGfxAdvMode: return ParameterLine::ID::BtnGfxAdvMode;
         case LogicalParameter::ID::BtnGfxBtnPos1: return ParameterLine::ID::BtnGfxBtnPos1;
@@ -1250,8 +1252,9 @@ ParameterLine::ID ParameterLine::parIdToParLineId(LogicalParameter::ID id)
         case LogicalParameter::ID::BgClr: return ParameterLine::ID::BgClr;
         case LogicalParameter::ID::BgScale: return ParameterLine::ID::BgScale;
 
-		case LogicalParameter::ID::MainWndwTitleBar: return ParameterLine::ID::MainWndwTitleBar;
-		case LogicalParameter::ID::RenderUpdateFrequency: return ParameterLine::ID::RenderUpdateFrequency;
+        case LogicalParameter::ID::MainWndwTitleBar: return ParameterLine::ID::MainWndwTitleBar;
+        case LogicalParameter::ID::MainWndwResizable: return ParameterLine::ID::MainWndwResizable;
+        case LogicalParameter::ID::RenderUpdateFrequency: return ParameterLine::ID::RenderUpdateFrequency;
         case LogicalParameter::ID::MainWndwTop: return ParameterLine::ID::MainWndwTop;
         case LogicalParameter::ID::MainWndwBot: return ParameterLine::ID::MainWndwBot;
         case LogicalParameter::ID::MainWndwLft: return ParameterLine::ID::MainWndwLft;

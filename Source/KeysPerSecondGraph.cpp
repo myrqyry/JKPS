@@ -5,14 +5,15 @@
 #include <SFML/Window/Event.hpp>
 
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
+#include <ctime>
 
 
 KeysPerSecondGraph::KeysPerSecondGraph()
 : mVertecies(sf::TriangleFan, 16)
 , mActiveVertecies(16)
 {
-    srand(time(NULL));
+    std::srand(static_cast<unsigned>(std::time(nullptr)));
 
     const float widthStep = 800.f / 13.f;
     float width = 0;
@@ -21,7 +22,7 @@ KeysPerSecondGraph::KeysPerSecondGraph()
     {
         sf::Vertex &vertex = mVertecies[i];
         vertex.position.x = width;
-        vertex.position.y = height - i * 20;
+        vertex.position.y = height - static_cast<float>(i * 20);
         width += widthStep;
     }
     mVertecies[14].position = sf::Vector2f(800, 600);
@@ -32,7 +33,7 @@ void KeysPerSecondGraph::handleOwnEvent()
 {
     auto event = sf::Event();
     while (mWindow.pollEvent(event))
-    { 
+    {
         if (event.type == sf::Event::KeyPressed)
         {
             const auto key = event.key;
@@ -87,7 +88,7 @@ void KeysPerSecondGraph::updateParameters()
     // mActiveVertecies =
 }
 
-bool KeysPerSecondGraph::parameterIdMatches(LogicalParameter::ID id)
+bool KeysPerSecondGraph::parameterIdMatches(LogicalParameter::ID /* id */)
 {
     return false;
 }

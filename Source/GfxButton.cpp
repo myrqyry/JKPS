@@ -8,8 +8,10 @@
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Graphics/RenderStates.hpp>
+#include <SFML/Graphics/VertexArray.hpp>
 
 #include <algorithm>
+#include <cmath>
 
 
 bool GfxButton::mShowBounds(false);
@@ -46,56 +48,24 @@ GfxButton::GfxButton(const unsigned idx, const TextureHolder &textureHolder, con
 
 void GfxButton::update(float deltaSeconds, bool keyState)
 {
-    // Enhanced key visualizer styling setup
-    static KeyVisualizerStyle currentKeyVisualizerStyle;
-    static bool themeInitialized = false;
-    
-    // Initialize with theme from themes.json on first run
-    if (!themeInitialized)
-    {
-        currentKeyVisualizerStyle = {
-            backgroundColor = sf::Color(20, 30, 40, 180),
-            borderColor = sf::Color(60, 100, 140, 255),
-            textColor = sf::Color(180, 200, 220, 255),
-            cornerRadius = 8.0f,
-            shadowIntensity = 0.6f,
-            themeAware = true
-        };
-        themeInitialized = true;
-    }
-    
-    // Run existing animations first
     if (Settings::LightAnimation)
         keyState ? lightKey() : fadeKey();
     if (Settings::PressAnimation)
         keyState ? lowerKey() : raiseKey();
-    
-    // Enhanced key visualizer with press animation triggers
+
     if (Settings::KeyPressVisToggle)
     {
-        // Create enhanced visualizer on key press if last frame was not pressed
+        // Create a new rectangle on button press if last frame the button was not pressed
         if (!mLastKeyState && keyState)
         {
             const auto &buttonSprite = *mSprites[ButtonSprite];
             const auto rect = buttonSprite.getGlobalBounds();
-            
-            // Enhanced visualizer with theme-aware styling
-            const auto visualizerIndex = KeyVisualizerSprite;
-            auto &visualizerSprite = *mSprites[visualizerIndex];
-            
-            // Apply theme-enhanced visualizer properties
-            visualizerSprite.setPosition(rect.position);
-            visualizerSprite.setScale(sf::Vector2f(1.2f, 1.2f)); // Press effect scaling
-            visualizerSprite.setColor(currentKeyVisualizerStyle.backgroundColor);
-            
-            // Create enhanced emitter with theme awareness
-            mEmitter.update(deltaSeconds, keyState, mLastKeyState);
+            mEmitter.create(deltaSeconds, { rect.width, rect.height });
         }
     }
-    
-    // Enhanced emitter animation with press effects
+
     mEmitter.update(deltaSeconds, keyState, mLastKeyState);
-    
+
     mLastKeyState = keyState;
 }
 
@@ -106,7 +76,7 @@ void GfxButton::draw(sf::RenderTarget &target, sf::RenderStates states) const
             target.draw(text, states);
             const auto boundsStates = states.transform.translate(text.getPosition());
 
-            if (mShowBounds && (mSelectedKeyBounds == -1 || mSelectedKeyBounds == mBtnIdx))
+            if (mShowBounds && (mSelectedKeyBounds == -1 || mSelectedKeyBounds == static_cast<int>(mBtnIdx)))
             {
                 target.draw(mBounds, boundsStates);
             }
@@ -126,8 +96,23 @@ void GfxButton::draw(sf::RenderTarget &target, sf::RenderStates states) const
     target.draw(mEmitter, emitterStates);
 
     // Key's graphics
-    for (const auto &sprite : mSprites)
-        target.draw(*sprite, states);
+    if (Settings::ButtonShape == 0)
+    {
+        target.draw(*mSprites[ButtonSprite], states);
+    }
+    else
+    {
+        sf::FloatRect bounds = mSprites[ButtonSprite]->getLocalBounds();
+        sf::Vector2f size(bounds.width, bounds.height);
+        sf::Vector2f origin = mSprites[ButtonSprite]->getOrigin();
+        sf::RenderStates spriteStates = states;
+        spriteStates.transform *= mSprites[ButtonSprite]->getTransform();
+        sf::Vector2f shapePos(-origin.x, -origin.y);
+        
+        drawVectorShape(target, spriteStates, Settings::ButtonShape, shapePos, size, 
+                        mSprites[ButtonSprite]->getColor(), Settings::GfxButtonBorderColor);
+    }
+    target.draw(*mSprites[AnimationSprite], states);
 
     // Key's text
     if (Settings::ButtonTextShowVisualKeys) 
@@ -163,9 +148,9 @@ void GfxButton::fadeKey()
 
     scale = getScale();
     // Scaling can go beyond due to floating point issues
-    if ((scaleStep.x > 0.f && scale.x > 1.f) || (scaleStep.x < 0 && scale.x < 1.f))
+    if ((scaleStep.x > 0.f && scale.x > 1.f) || (scaleStep.x < 0.f && scale.x < 1.f))
         setScale(1.f, getScale().y);
-    if ((scaleStep.y > 0.f && scale.y > 1.f) || (scaleStep.y < 0 && scale.y < 1.f))
+    if ((scaleStep.y > 0.f && scale.y > 1.f) || (scaleStep.y < 0.f && scale.y < 1.f))
         setScale(getScale().x, 1.f);
 }
 
@@ -220,7 +205,7 @@ sf::Vector2f GfxButton::getScaleStep() const
 
 float GfxButton::getRiseStep() const
 {
-    return Settings::AnimationOffset / Settings::AnimationFrames;
+    return Settings::AnimationOffset / static_cast<float>(Settings::AnimationFrames);
 }
 
 void GfxButton::updateAssets()
@@ -237,15 +222,19 @@ void GfxButton::updateParameters()
     const auto advTextMode = isInSupportedRange && Settings::ButtonTextAdvancedMode;
     const auto advGfxMode = isInSupportedRange && Settings::GfxButtonAdvancedMode;
 
-    // Apply enhanced button styling for overlays with more pronounced press animations
-    applyEnhancedButtonStyling(mBtnIdx, advGfxMode, advTextMode, sepValAdvMode);
+    const auto color = !advGfxMode ? Settings::GfxButtonTextureColor : Settings::GfxButtonsColor[mBtnIdx];
+
+    scaleSprites();
+    mSprites[ButtonSprite]->setColor(color);
+    // Substraction by black (0,0,0,255) is needed to set alpha channel on 0 when any related animation key parameter is changed
+    mSprites[AnimationSprite]->setColor(Settings::AnimationColor - sf::Color::Black);
 
     auto idx = 0ul;
     for (auto &text : mTexts)
     {
         const auto color = !advTextMode ? Settings::ButtonTextColor : Settings::ButtonTextAdvColor[mBtnIdx];
         const auto chSz = !advTextMode ? Settings::ButtonTextCharacterSize : Settings::ButtonTextAdvCharacterSize[mBtnIdx];
-        const auto outThck = (!advTextMode ? Settings::ButtonTextOutlineThickness : Settings::ButtonTextAdvOutlineThickness[mBtnIdx]) / 10.f;
+        const auto outThck = (!advTextMode ? static_cast<float>(Settings::ButtonTextOutlineThickness) : static_cast<float>(Settings::ButtonTextAdvOutlineThickness[mBtnIdx])) / 10.f;
         const auto outColor = !advTextMode ? Settings::ButtonTextOutlineColor : Settings::ButtonTextAdvOutlineColor[mBtnIdx];
         const auto bold = !advTextMode ? Settings::ButtonTextBold : Settings::ButtonTextAdvBold[mBtnIdx];
         const auto italic = !advTextMode ? Settings::ButtonTextItalic : Settings::ButtonTextAdvItalic[mBtnIdx];
@@ -272,1058 +261,9 @@ void GfxButton::updateParameters()
 
             case BeatsPerMinute:
                 pos += Utility::swapY(Settings::ButtonTextBPMTextPosition + (sepValAdvMode 
-                    ? Settings::ButtonTextAdvBPMTextPosition[mBtnIdx] : sf::Vector2f());
+                    ? Settings::ButtonTextAdvBPMTextPosition[mBtnIdx] : sf::Vector2f()));
                 break;
         }
-
-        text->setFillColor(color);
-        text->setCharacterSize(chSz);
-        text->setPosition(pos);
-        text->setStyle(sf::Uint32((bold ? sf::Text::Bold : 0) | (italic ? sf::Text::Italic : 0)));
-        text->setOutlineThickness(outThck);
-        text->setOutlineColor(outColor);
-
-        const auto lAlt = Settings::ShowOppOnAlt && sf::Keyboard::isKeyPressed(sf::Keyboard::LAlt);
-        if ((lAlt && idx == VisualKey && Settings::ButtonTextShowVisualKeys && !Settings::ButtonTextShowTotal)
-        || (lAlt && idx == KeyCounter && !Settings::ButtonTextShowVisualKeys && Settings::ButtonTextShowTotal))
-        {
-            text->setPosition(pos);
-        }
-
-        ++idx;
-    }
-
-    const auto size = !advTextMode ? Settings::ButtonTextBounds : Settings::ButtonTextAdvBounds[mBtnIdx];
-    mBounds.setSize(size);
-    mBounds.setOrigin(size / 2.f);
-}
-
-void GfxButton::applyEnhancedButtonStyling(unsigned idx, bool advGfxMode, bool advTextMode, bool sepValAdvMode)
-{
-    // Enhanced overlay button styling with more pronounced press effects
-    const auto buttonColor = getEnhancedOverlayButtonColor(idx, advGfxMode);
-    const auto borderColor = getEnhancedButtonBorderColor(idx, advGfxMode);
-    const auto shadowColor = getEnhancedShadowColor(idx);
-    const auto pressColor = getEnhancedPressColor(idx, advGfxMode);
-    
-    // Apply enhanced gradient for overlay depth
-    applyEnhancedGradientToSprite(mSprites[ButtonSprite], buttonColor, advGfxMode, idx);
-    
-    // Apply enhanced press animation borders with dynamic effects
-    applyEnhancedPressBorder(mSprites[ButtonSprite], borderColor, shadowColor, pressColor, advGfxMode, idx);
-    
-    // Enhanced animation styling for overlay interactions
-    auto enhancedAnimationColor = Settings::AnimationColor;
-    if (!advGfxMode)
-    {
-        // Enhanced modern color with alpha variations for overlay
-        enhancedAnimationColor = sf::Color(255, 220, 100, 200); // Brighter for overlay
-    }
-    else
-    {
-        // Custom enhanced color from advanced settings
-        enhancedAnimationColor = Settings::GfxButtonsColor[idx];
-    }
-    mSprites[AnimationSprite]->setColor(enhancedAnimationColor - sf::Color::Black);
-    
-    // Apply enhanced scaling with press animation potential
-    applyEnhancedScaling(idx, advGfxMode);
-}
-
-void GfxButton::update(float deltaSeconds, bool keyState)
-{
-    // Enhanced key visualizer styling setup
-    static KeyVisualizerStyle currentKeyVisualizerStyle;
-    static bool themeInitialized = false;
-    
-    // Initialize with theme from themes.json on first run
-    if (!themeInitialized)
-    {
-        currentKeyVisualizerStyle = {
-            backgroundColor = sf::Color(20, 30, 40, 180),
-            borderColor = sf::Color(60, 100, 140, 255),
-            textColor = sf::Color(180, 200, 220, 255),
-            cornerRadius = 8.0f,
-            shadowIntensity = 0.6f,
-            themeAware = true
-        };
-        themeInitialized = true;
-    }
-    
-    // Run existing animations first
-    if (Settings::LightAnimation)
-        keyState ? lightKey() : fadeKey();
-    if (Settings::PressAnimation)
-        keyState ? lowerKey() : raiseKey();
-    
-    // Enhanced key visualizer with press animation triggers
-    if (Settings::KeyPressVisToggle)
-    {
-        // Create enhanced visualizer on key press if last frame was not pressed
-        if (!mLastKeyState && keyState)
-        {
-            const auto &buttonSprite = *mSprites[ButtonSprite];
-            const auto rect = buttonSprite.getGlobalBounds();
-            
-            // Enhanced visualizer with theme-aware styling
-            const auto visualizerIndex = KeyVisualizerSprite;
-            auto &visualizerSprite = *mSprites[visualizerIndex];
-            
-            // Apply theme-enhanced visualizer properties
-            visualizerSprite.setPosition(rect.position);
-            visualizerSprite.setScale(sf::Vector2f(1.2f, 1.2f)); // Press effect scaling
-            visualizerSprite.setColor(currentKeyVisualizerStyle.backgroundColor);
-            
-            // Create enhanced emitter with theme awareness
-            mEmitter.update(deltaSeconds, keyState, mLastKeyState);
-        }
-    }
-    
-    // Enhanced emitter animation with press effects
-    mEmitter.update(deltaSeconds, keyState, mLastKeyState);
-    
-    mLastKeyState = keyState;
-}
-
-void GfxButton::applyEnhancedGradientToSprite(std::unique_ptr<sf::Sprite> &sprite, const sf::Color &baseColor, bool advMode, unsigned idx)
-{
-    if (advMode)
-    {
-        // Advanced gradient with overlay-specific enhancements
-        const auto enhancedColors = getEnhancedGradientColors(idx);
-        
-        // Create semi-transparent gradient background for overlay
-        sf::VertexArray enhancedGradient(sf::Quads, 4);
-        
-        float enhancedWidth = static_cast<float>(sprite->getTexture()->getSize().x);
-        float enhancedHeight = static_cast<float>(sprite->getTexture()->getSize().y);
-        
-        // Enhanced gradient with brightness variation for overlay
-        enhancedGradient[0].position = sf::Vector2f(0, 0);
-        enhancedGradient[0].color = enhancedColors.topLeft;
-        
-        enhancedGradient[1].position = sf::Vector2f(enhancedWidth, 0);
-        enhancedGradient[1].color = enhancedColors.topRight;
-        
-        enhancedGradient[2].position = sf::Vector2f(enhancedWidth, enhancedHeight);
-        enhancedGradient[2].color = enhancedColors.bottomRight;
-        
-        enhancedGradient[3].position = sf::Vector2f(0, enhancedHeight);
-        enhancedGradient[3].color = enhancedColors.bottomLeft;
-        
-        // Apply enhanced gradient effect
-    }
-    else
-    {
-        // Enhanced solid color with gradient overlay for better visibility
-        sf::Color enhancedColor = baseColor;
-        enhancedColor.a = static_cast<sf::Uint8>(static_cast<float>(enhancedColor.a) * 0.85f); // More opaque for overlay
-        sprite->setColor(enhancedColor);
-    }
-}
-
-void GfxButton::applyEnhancedPressBorder(std::unique_ptr<sf::Sprite> &sprite, const sf::Color &borderColor, const sf::Color &shadowColor, const sf::Color &pressColor, bool advMode, unsigned idx)
-{
-    // Enhanced border with interactive press effects for overlay
-    auto enhancedBounds = sprite->getGlobalBounds();
-    
-    const float enhancedCornerRadius = 6.0f; // Slightly rounded for overlay
-    const float enhancedBorderThickness = 3.0f; // Thicker borders for overlay
-    
-    // Enhanced shadow with more depth for overlay
-    sf::RectangleShape enhancedShadowRect;
-    enhancedShadowRect.setSize(enhancedBounds.size + sf::Vector2f(6.0f, 6.0f));
-    enhancedShadowRect.setPosition(enhancedBounds.position - sf::Vector2f(3.0f, 3.0f));
-    enhancedShadowRect.setFillColor(sf::Color(shadowColor.r, shadowColor.g, shadowColor.b, 60)); // More opaque shadow
-    enhancedShadowRect.setOutlineThickness(0);
-    
-    // Enhanced main border with gradient effects
-    sf::RectangleShape enhancedBorderRect;
-    enhancedBorderRect.setSize(enhancedBounds.size);
-    enhancedBorderRect.setPosition(enhancedBounds.position);
-    enhancedBorderRect.setFillColor(sf::Color::Transparent);
-    enhancedBorderRect.setOutlineThickness(enhancedBorderThickness);
-    enhancedBorderRect.setOutlineColor(borderColor);
-    
-    // Enhanced border effect with color transitions
-    sprite->setColor(borderColor);
-    
-    // Add subtle gradient overlay for modern appearance
-    applyEnhancedGradientOverlay(sprite, pressColor, idx);
-}
-
-void GfxButton::applyEnhancedScaling(unsigned idx, bool advMode)
-{
-    // Enhanced scaling with press animation potential and responsive sizing
-    auto &enhancedButtonSprite = *mSprites[ButtonSprite];
-    auto &enhancedAnimationSprite = *mSprites[AnimationSprite];
-    
-    const auto enhancedButtonTextureSize = enhancedButtonSprite.getTexture()->getSize();
-    const auto enhancedAnimationTextureSize = enhancedAnimationSprite.getTexture()->getSize();
-    
-    // Enhanced scaling values for overlay
-    const float enhancedBaseScale = 1.0f; // Standard for overlay
-    const float enhancedAnimationScale = 1.0f; // Standard for overlay
-    
-    // Apply responsive scaling with theme and environment factors
-    applyResponsiveScaling(idx, enhancedBaseScale, enhancedAnimationScale);
-    
-    enhancedButtonSprite.setScale(enhancedBaseScale);
-    enhancedAnimationSprite.setScale(enhancedAnimationScale);
-    
-    // Enhanced origin centering
-    enhancedButtonSprite.setOrigin(enhancedButtonTextureSize / 2.f);
-    enhancedAnimationSprite.setOrigin(enhancedAnimationTextureSize / 2.f);
-    
-    // Apply enhanced text scaling
-    applyResponsiveTextScaling(idx);
-}
-
-void GfxButton::applyResponsiveScaling(unsigned idx, float &baseScale, float &animationScale)
-{
-    // Responsive scaling based on overlay dimensions and environment
-    const auto isInSupportedRange = idx < Settings::SupportedAdvancedKeysNumber;
-    const auto advMode = isInSupportedRange && Settings::GfxButtonAdvancedMode;
-    
-    // Base scaling factors from settings
-    const float baseScalingFactor = !advMode ? Settings::GfxButtonScaleFactor : Settings::GfxButtonAdvScaleFactor[idx];
-    const float animationScalingFactor = !advMode ? Settings::GfxButtonAnimationScaleFactor : Settings::GfxButtonAdvAnimationScaleFactor[idx];
-    
-    // Apply responsive boundaries
-    baseScale *= std::clamp(baseScalingFactor, Settings::GfxButtonMinScale, Settings::GfxButtonMaxScale);
-    animationScale *= std::clamp(animationScalingFactor, Settings::GfxButtonMinScale, Settings::GfxButtonMaxScale);
-    
-    // Environment-based scaling adjustments
-    const auto envScalingFactor = getEnvironmentScaleFactor();
-    baseScale *= envScalingFactor;
-    animationScale *= envScalingFactor;
-}
-
-void GfxButton::applyResponsiveTextScaling(unsigned idx)
-{
-    // Enhanced text scaling with responsive typography
-    const auto isInSupportedRange = idx < Settings::SupportedAdvancedKeysNumber;
-    const auto advTextMode = isInSupportedRange && Settings::ButtonTextAdvancedMode;
-    
-    const float textScale = !advTextMode ? Settings::GfxButtonTextScaleFactor : Settings::GfxButtonAdvTextScaleFactor[idx];
-    
-    for (auto &text : mTexts)
-    {
-        const auto currentTextSize = text->getCharacterSize();
-        const auto scaledTextSize = static_cast<unsigned int>(currentTextSize * textScale);
-        text->setCharacterSize(scaledTextSize);
-        
-        // Enhanced origin updating for scaled text
-        const auto enhancedTextBounds = text->getLocalBounds();
-        text->setOrigin(enhancedTextBounds.left + enhancedTextBounds.width / 2,
-                      enhancedTextBounds.top + enhancedTextBounds.height / 2);
-    }
-}
-
-float GfxButton::getEnvironmentScaleFactor()
-{
-    // Dynamic scaling based on overlay environment and context
-    float scaleFactor = 1.0f;
-    
-    // Calculate environment factors based on application context
-    if (Settings::IsOverlayApplication)
-    {
-        // Overlay-specific scaling adjustments
-        scaleFactor *= Settings::OverlayScaleFactor;
-        scaleFactor *= getWindowContentScale();
-    }
-    
-    // Additional environment factors from Settings
-    scaleFactor *= Settings::GlobalScaleFactor;
-    
-    return std::clamp(scaleFactor, Settings::GfxButtonMinScale, Settings::GfxButtonMaxScale);
-}
-
-float GfxButton::getWindowContentScale()
-{
-    // Calculate scaling based on current window/view content
-    const auto windowSize = getWindowSize();
-    const auto contentSize = getContentSize();
-    
-    if (windowSize.x > 0 && windowSize.y > 0)
-    {
-        const float windowContentRatio = std::min(windowSize.x / contentSize.x, windowSize.y / contentSize.y);
-        return std::clamp(windowContentRatio, Settings::GfxButtonMinScale, Settings::GfxButtonMaxScale);
-    }
-    
-    return 1.0f;
-}
-
-void GfxButton::applyEnhancedGradientOverlay(std::unique_ptr<sf::Sprite> &sprite, const sf::Color &pressColor, unsigned idx)
-{
-    // Apply enhanced gradient overlay for press effect
-    auto enhancedBounds = sprite->getGlobalBounds();
-    
-    // Create enhanced gradient overlay
-    sf::RectangleShape enhancedOverlay;
-    enhancedOverlay.setSize(enhancedBounds.size);
-    enhancedOverlay.setPosition(enhancedBounds.position);
-    enhancedOverlay.setFillColor(pressColor);
-    enhancedOverlay.setOutlineThickness(0);
-    
-    // The enhanced overlay would be applied via shader or multiple sprite layers
-    // For now, we'll enhance the sprite color directly
-    auto currentColor = sprite->getColor();
-    currentColor.r = static_cast<sf::Uint8>(currentColor.r * 0.9f);
-    currentColor.g = static_cast<sf::Uint8>(currentColor.g * 0.95f);
-    currentColor.b = static_cast<sf::Uint8>(currentColor.b * 1.0f);
-    sprite->setColor(currentColor);
-}
-
-GfxButton::ThemeInfo GfxButton::getCurrentTheme()
-{
-    // Get current theme from themes.json based on settings
-    ThemeInfo theme;
-    
-    // Default modern theme
-    theme.themeName = "Modern";
-    theme.colors.normalBorder = sf::Color(120, 180, 255, 255);
-    theme.colors.pressedBorder = sf::Color(100, 160, 240, 255);
-    theme.colors.shadow = sf::Color(80, 120, 160, 150);
-    theme.colors.pressColor = sf::Color(255, 220, 100, 200);
-    theme.colors.gradientTop = sf::Color(52, 152, 219, 255);
-    theme.colors.gradientBottom = sf::Color(26, 88, 150, 255);
-    
-    // Override with settings if available
-    if (Settings::CurrentThemeIndex >= 0 && Settings::CurrentThemeIndex < static_cast<int>(settingsThemes.size()))
-    {
-        theme = settingsThemes[Settings::CurrentThemeIndex];
-    }
-    
-    return theme;
-}
-
-void GfxButton::initializeThemeSystem()
-{
-    // Initialize theme system from themes.json
-    settingsThemes.clear();
-    
-    // Load themes from themes.json
-    settingsThemes.push_back({"Modern", sf::Color(120, 180, 255, 255), sf::Color(100, 160, 240, 255), sf::Color(80, 120, 160, 150), sf::Color(255, 220, 100, 200), sf::Color(52, 152, 219, 255), sf::Color(26, 88, 150, 255)});
-    settingsThemes.push_back({"Dracula", sf::Color(98, 114, 164, 255), sf::Color(83, 94, 135, 255), sf::Color(68, 76, 90, 150), sf::Color(255, 184, 108, 200), sf::Color(189, 147, 249, 255), sf::Color(114, 92, 186, 255)});
-    settingsThemes.push_back({"Monokai", sf::Color(102, 102, 102, 255), sf::Color(166, 226, 46, 255), sf::Color(66, 66, 66, 150), sf::Color(255, 184, 108, 200), sf::Color(249, 191, 59, 255), sf::Color(208, 135, 112, 255)});
-    settingsThemes.push_back({"Solarized Dark", sf::Color(131, 148, 150, 255), sf::Color(131, 148, 150, 255), sf::Color(101, 115, 124, 150), sf::Color(255, 205, 109, 200), sf::Color(42, 161, 142, 255), sf::Color(7, 54, 66, 255)});
-    settingsThemes.push_back({"Nord", sf::Color(136, 157, 170, 255), sf::Color(94, 129, 172, 255), sf::Color(76, 86, 106, 150), sf::Color(238, 153, 114, 200), sf::Color(64, 142, 154, 255), sf::Color(59, 66, 87, 255)});
-    settingsThemes.push_back({"Solarized Light", sf::Color(101, 115, 124, 255), sf::Color(181, 137, 0, 255), sf::Color(101, 115, 124, 150), sf::Color(255, 81, 0, 200), sf::Color(42, 161, 142, 255), sf::Color(7, 54, 66, 255)});
-    settingsThemes.push_back({"Night Owl", sf::Color(108, 114, 127, 255), sf::Color(130, 170, 255, 255), sf::Color(52, 61, 80, 150), sf::Color(240, 164, 8, 200), sf::Color(138, 204, 247, 255), sf::Color(23, 38, 50, 255)});
-    settingsThemes.push_back({"Horizon Dark", sf::Color(149, 152, 157, 255), sf::Color(130, 132, 137, 255), sf::Color(38, 40, 45, 150), sf::Color(252, 185, 62, 200), sf::Color(85, 196, 229, 255), sf::Color(28, 30, 35, 255)});
-}
-
-// Global theme storage
-std::vector<GfxButton::ThemeInfo> GfxButton::settingsThemes;
-
-void GfxButton::applyEnhancedGradientOverlay(std::unique_ptr<sf::Sprite> &sprite, const sf::Color &pressColor, unsigned idx)
-{
-    // Apply enhanced gradient overlay for press effect
-    auto enhancedBounds = sprite->getGlobalBounds();
-    
-    // Create enhanced gradient overlay
-    sf::RectangleShape enhancedOverlay;
-    enhancedOverlay.setSize(enhancedBounds.size);
-    enhancedOverlay.setPosition(enhancedBounds.position);
-    enhancedOverlay.setFillColor(pressColor);
-    enhancedOverlay.setOutlineThickness(0);
-    
-    // The enhanced overlay would be applied via shader or multiple sprite layers
-    // For now, we'll enhance the sprite color directly
-    auto currentColor = sprite->getColor();
-    currentColor.r = static_cast<sf::Uint8>(currentColor.r * 0.9f);
-    currentColor.g = static_cast<sf::Uint8>(currentColor.g * 0.95f);
-    currentColor.b = static_cast<sf::Uint8>(currentColor.b * 1.0f);
-    sprite->setColor(currentColor);
-}
-
-GfxButton::EnhancedGradientColors GfxButton::getEnhancedGradientColors(unsigned idx) const
-{
-    EnhancedGradientColors colors;
-    
-    // Generate enhanced gradient colors based on button index for overlay variety
-    const float enhancedHue = static_cast<float>(idx * 20) % 360.0f; // Different hue spread for overlay
-    const float enhancedSaturation = 0.8f; // Higher saturation for overlay
-    const float enhancedBrightness = 0.95f; // Brighter for overlay
-    
-    // Enhanced HSL to RGB conversion
-    auto enhancedHslToRgb = [](float h, float s, float l) -> sf::Color
-    {
-        float c = (1 - std::abs(2 * l - 1)) * s;
-        float x = c * (1 - std::abs(fmod(h / 60.0f, 2) - 1));
-        float m = l - c / 2;
-        
-        float r = 0, g = 0, b = 0;
-        
-        if (0 <= h && h < 60)
-            r = c, g = x, b = 0;
-        else if (60 <= h && h < 180)
-            r = x, g = c, b = 0;
-        else if (180 <= h && h < 240)
-            r = 0, g = c, b = x;
-        else if (240 <= h && h < 300)
-            r = 0, g = x, b = c;
-        else if (300 <= h && h < 360)
-            r = c, g = 0, b = x;
-        
-        return sf::Color(
-            static_cast<sf::Uint8>((r + m) * 255),
-            static_cast<sf::Uint8>((g + m) * 255),
-            static_cast<sf::Uint8>((b + m) * 255)
-        );
-    };
-    
-    // Enhanced gradient colors for overlay visibility
-    colors.topLeft = enhancedHslToRgb(enhancedHue, enhancedSaturation, enhancedBrightness * 0.9f);
-    colors.topRight = enhancedHslToRgb((enhancedHue + 30) % 360, enhancedSaturation, enhancedBrightness * 1.0f);
-    colors.bottomRight = enhancedHslToRgb((enhancedHue + 60) % 360, enhancedSaturation, enhancedBrightness * 0.85f);
-    colors.bottomLeft = enhancedHslToRgb((enhancedHue + 90) % 360, enhancedSaturation, enhancedBrightness * 0.95f);
-    
-    return colors;
-}
-
-GfxButton::GradientColors GfxButton::getEnhancedOverlayButtonColor(unsigned idx, bool advMode)
-{
-    GradientColors enhancedColors;
-    
-    if (advMode)
-    {
-        // Use custom enhanced gradient from advanced settings
-        enhancedColors = getEnhancedGradientColors(idx);
-    }
-    else
-    {
-        // Enhanced modern default gradient for non-advanced overlay mode
-        enhancedColors.topLeft = sf::Color(100, 180, 255, 255);   // Enhanced blue
-        enhancedColors.topRight = sf::Color(80, 150, 220, 255);   // Darker blue
-        enhancedColors.bottomRight = sf::Color(50, 100, 180, 255); // Even darker blue
-        enhancedColors.bottomLeft = sf::Color(120, 200, 255, 255); // Lighter blue enhanced
-    }
-    
-    return enhancedColors;
-}
-
-sf::Color GfxButton::getEnhancedButtonBorderColor(unsigned idx, bool advMode)
-{
-    if (advMode)
-    {
-        // Use custom border color from advanced settings
-        return Settings::GfxButtonsColor[idx];
-    }
-    else
-    {
-        // Enhanced modern border color for overlay
-        return sf::Color(120, 180, 255, 255); // Enhanced border color
-    }
-}
-
-sf::Color GfxButton::getEnhancedShadowColor(unsigned idx)
-{
-    // Enhanced shadow color for overlay visibility
-    return sf::Color(80, 120, 160, 150); // Enhanced shadow color
-}
-
-sf::Color GfxButton::getEnhancedPressColor(unsigned idx, bool advMode)
-{
-    // Enhanced press color for interactive overlay effects
-    if (advMode)
-    {
-        return Settings::GfxButtonsColor[idx];
-    }
-    else
-    {
-        return sf::Color(255, 220, 100, 200); // Enhanced press color
-    }
-}
-
-void GfxButton::applyGradientToSprite(std::unique_ptr<sf::Sprite> &sprite, const sf::Color &baseColor, bool advMode, unsigned idx)
-{
-    if (advMode)
-    {
-        // Advanced gradient with multiple colors based on button index
-        const auto colors = getGradientColors(idx);
-        
-        sf::VertexArray gradient(sf::Triangles, 6);
-        
-        // Create gradient effect
-        float gradientWidth = static_cast<float>(sprite->getTexture()->getSize().x);
-        float gradientHeight = static_cast<float>(sprite->getTexture()->getSize().y);
-        
-        // Top-left to bottom-right gradient
-        gradient[0].position = sf::Vector2f(0, 0);
-        gradient[0].color = colors.topLeft;
-        
-        gradient[1].position = sf::Vector2f(gradientWidth, 0);
-        gradient[1].color = colors.topRight;
-        
-        gradient[2].position = sf::Vector2f(gradientWidth, gradientHeight);
-        gradient[2].color = colors.bottomRight;
-        
-        gradient[3].position = sf::Vector2f(0, 0);
-        gradient[3].color = colors.topLeft;
-        
-        gradient[4].position = sf::Vector2f(gradientWidth, gradientHeight);
-        gradient[4].color = colors.topRight;
-        
-        gradient[5].position = sf::Vector2f(0, gradientHeight);
-        gradient[5].color = colors.bottomLeft;
-        
-        // Apply gradient as texture effect
-        // Note: This would require more advanced shader implementation
-        // For now, we'll use enhanced color fills
-    }
-    else
-    {
-        // Simplified modern color fill for non-advanced mode
-        sprite->setColor(baseColor);
-    }
-}
-
-void GfxButton::applyModernBorder(std::unique_ptr<sf::Sprite> &sprite, const sf::Color &borderColor, const sf::Color &shadowColor, bool advMode, unsigned idx)
-{
-    // Enhanced border with shadow effect
-    auto bounds = sprite->getGlobalBounds();
-    
-    // Create rounded rectangle effect for modern appearance
-    const float cornerRadius = 8.0f;
-    
-    // Apply subtle shadow for depth
-    sf::RectangleShape shadowRect;
-    shadowRect.setSize(bounds.size + sf::Vector2f(4.0f, 4.0f));
-    shadowRect.setPosition(bounds.position - sf::Vector2f(2.0f, 2.0f));
-    shadowRect.setFillColor(sf::Color(shadowColor.r, shadowColor.g, shadowColor.b, 50)); // Semi-transparent shadow
-    shadowRect.setOutlineThickness(0);
-    shadowRect.setOutlineColor(sf::Color::Transparent);
-    
-    // Main border with modern style
-    sf::RectangleShape borderRect;
-    borderRect.setSize(bounds.size);
-    borderRect.setPosition(bounds.position);
-    borderRect.setFillColor(sf::Color::Transparent);
-    borderRect.setOutlineThickness(2.0f);
-    borderRect.setOutlineColor(borderColor);
-    borderRect.setOutlineMode(sf::PrimitiveType::Quads);
-    
-    // Note: Visual enhancement with rounded corners would require additional shader implementation
-    // For now, we'll enhance the sprite with additional effects
-    
-    // Apply modern border effect to sprite
-    sprite->setColor(borderColor);
-}
-
-GfxButton::GradientColors GfxButton::getGradientColors(unsigned idx) const
-{
-    GradientColors colors;
-    
-    // Generate gradient colors based on button index for variety
-    const float hue = static_cast<float>(idx * 25) % 360.0f; // Rotate through hues
-    const float saturation = 0.7f;
-    const float brightness = 0.9f;
-    
-    // Helper function to convert HSL to RGB
-    auto hslToRgb = [](float h, float s, float l) -> sf::Color
-    {
-        float c = (1 - std::abs(2 * l - 1)) * s;
-        float x = c * (1 - std::abs(fmod(h / 60.0f, 2) - 1));
-        float m = l - c / 2;
-        
-        float r = 0, g = 0, b = 0;
-        
-        if (0 <= h && h < 60)
-            r = c, g = x, b = 0;
-        else if (60 <= h && h < 180)
-            r = x, g = c, b = 0;
-        else if (180 <= h && h < 240)
-            r = 0, g = c, b = x;
-        else if (240 <= h && h < 300)
-            r = 0, g = x, b = c;
-        else if (300 <= h && h < 360)
-            r = c, g = 0, b = x;
-        
-        return sf::Color(
-            static_cast<sf::Uint8>((r + m) * 255),
-            static_cast<sf::Uint8>((g + m) * 255),
-            static_cast<sf::Uint8>((b + m) * 255)
-        );
-    };
-    
-    // Create gradient colors with different shades
-    colors.topLeft = hslToRgb(hue, saturation, brightness * 0.8f);
-    colors.topRight = hslToRgb((hue + 30) % 360, saturation, brightness * 0.9f);
-    colors.bottomRight = hslToRgb((hue + 60) % 360, saturation, brightness * 0.7f);
-    colors.bottomLeft = hslToRgb((hue + 90) % 360, saturation, brightness * 0.85f);
-    
-    return colors;
-}
-
-GfxButton::GradientColors GfxButton::getModernButtonColor(unsigned idx, bool advMode)
-{
-    GradientColors colors;
-    
-    if (advMode)
-    {
-        // Use custom gradient from advanced settings
-        colors = getGradientColors(idx);
-    }
-    else
-    {
-        // Modern default gradient for non-advanced mode
-        colors.topLeft = sf::Color(52, 152, 219, 255);   // Modern blue
-        colors.topRight = sf::Color(41, 128, 185, 255);  // darker blue
-        colors.bottomRight = sf::Color(26, 88, 150, 255); // even darker blue
-        colors.bottomLeft = sf::Color(93, 173, 226, 255); // lighter blue
-    }
-    
-    return colors;
-}
-
-// GfxButton::RectEmitter::RectEmitter(const sf::Texture &texture)
-GfxButton::RectEmitter::RectEmitter(unsigned btnIdx)
-: mBtnIdx(btnIdx)
-//, mTexture(texture) 
-// , mTopVertecies(sf::Quads, 1000u)
-, mMiddleVertecies(sf::Quads, 1000u)
-// , mBottomVertecies(sf::Quads, 1000u)
-{
-    const auto count = mMiddleVertecies.getVertexCount() / 4;
-    for (auto i = 0ul; i < count; ++i)
-        mAvailableRectIndices.emplace_back(i);
-}
-
-void GfxButton::RectEmitter::update(float deltaSeconds, bool keyState, bool prevKeyState)
-{
-    // Don't update anything if there is no active rectangles
-    if (mUsedRectIndices.empty())
-        return;
-
-    std::vector<size_t> toRemove;
-
-    const auto isInSupportedRange = mBtnIdx < Settings::SupportedAdvancedKeysNumber;
-    const auto advMode = isInSupportedRange && Settings::KeyPressVisAdvSettingsMode;
-    const auto origSpeed = !advMode ? Settings::KeyPressVisSpeed : 
-        Settings::KeyPressVisAdvSpeed[mBtnIdx];
-    const auto speed = (-origSpeed * deltaSeconds * getConstantSpeedScale()) / 10.f;
-    const auto len = !advMode ? Settings::KeyPressVisFadeLineLen : 
-        Settings::KeyPressVisAdvFadeLineLen[mBtnIdx];
-    const auto minHeight = !advMode ? Settings::KeyPressFixedHeight :
-        Settings::KeyPressAdvFixedHeight[mBtnIdx];
-
-    // Iterate through all rectangles
-    for (auto i : mUsedRectIndices)
-    {
-        // Flag which identifies if all the rectangle vertices are on the same height
-        auto eachVertexIsOnLimit = true;
-
-        // Iterate through all the rectangle vertices
-        const auto vertexIndex = i * 4ul;
-        for (auto j = vertexIndex; j < vertexIndex + 4ul; ++j)
-        {
-            // Take vertex reference
-            // auto &topSideVertex = mTopVertecies[j];
-            auto &middleVertex = mMiddleVertecies[j];
-            // auto &bottomSideVertex = mBottomVertecies[j];
-
-            // Limit the square to go beyond the line length
-            auto move = [len, speed, deltaSeconds] (sf::Vertex &vertex)
-                {
-                    vertex.position.y = -std::min(std::abs(vertex.position.y + speed * deltaSeconds * getConstantSpeedScale()), len);
-                };
-            // move(topSideVertex);
-            move(middleVertex);
-            // move(bottomSideVertex);
-
-            // Check if the current vertex is on the max height, do so only if previous were so
-            // if (eachVertexIsOnLimit)
-            // {
-            //     eachVertexIsOnLimit = std::abs(bottomSideVertex.position.y) 
-            //         == len;
-            // }
-            if (eachVertexIsOnLimit)
-            {
-                eachVertexIsOnLimit = std::abs(middleVertex.position.y) == len;
-            }
-
-            // Set the right alpha channel depending on the progress to the end of the fade out length line
-            // topSideVertex.color = getVertexColor(mTopVertecies, j);
-            middleVertex.color = getVertexColor(mMiddleVertecies, j);
-            // bottomSideVertex.color = getVertexColor(mBottomVertecies, j);
-        }
-
-        // All vertices are on the same height
-        if (eachVertexIsOnLimit)
-        {
-            // Add the rectangle index to available index list, add to list of rectangles to remove
-            mAvailableRectIndices.emplace_back(i);
-            toRemove.emplace_back(i);
-        }
-    }
-
-    // Iterate through all the indices of the rectangles to remove
-    for (auto i : toRemove)
-    {
-        // Remove every index that is equal to i
-        mUsedRectIndices.erase(std::remove(
-                mUsedRectIndices.begin(), mUsedRectIndices.end(), i), 
-            mUsedRectIndices.end());
-    }
-
-    // If a button is pressed don't let the spawning rectangle go away from the spawn point
-    if (keyState)
-    {
-        const auto offset = mUsedRectIndices.back() * 4ul;
-        mMiddleVertecies[offset + 2ul].position.y = 
-        mMiddleVertecies[offset + 3ul].position.y -= speed * deltaSeconds * getConstantSpeedScale();
-
-        if (minHeight > 0 && std::abs(mMiddleVertecies[offset].position.y) > minHeight)
-        {
-            mMiddleVertecies[offset + 2ul].position.y = 
-            mMiddleVertecies[offset + 3ul].position.y = mMiddleVertecies[offset].position.y + minHeight;
-        }
-    }
-
-    // Move the nearest rectangle up on release
-    if (prevKeyState && !keyState && !mUsedRectIndices.empty())
-    {
-        const auto offset = mUsedRectIndices.back() * 4ul;
-
-        mMiddleVertecies[offset + 2ul].position.y = 
-        mMiddleVertecies[offset + 3ul].position.y -= speed * deltaSeconds * getConstantSpeedScale();
-
-        if (minHeight > 0 && std::abs(mMiddleVertecies[offset].position.y) > minHeight)
-        {
-            mMiddleVertecies[offset + 2ul].position.y = 
-            mMiddleVertecies[offset + 3ul].position.y = mMiddleVertecies[offset].position.y + minHeight;
-        }
-    }
-}
-
-void GfxButton::RectEmitter::draw(sf::RenderTarget &target, sf::RenderStates states) const
-{
-    states.transform = getPressRectTransform(states.transform);
-
-    target.draw(mMiddleVertecies, states);
-
-    // states.texture = &mTexture;
-    // target.draw(mTopVertecies, states);
-    // target.draw(mBottomVertecies, states);
-}
-
-void GfxButton::RectEmitter::setPosition(sf::Vector2f position)
-{
-    mEmitterPosition = position;
-}
-
-void GfxButton::RectEmitter::pushVertecies(sf::VertexArray &vertexArray, sf::Vertex *toPush, size_t offset, sf::Vector2f buttonSize)
-{
-    for (auto i = 0ul; i < 4ul; ++i)
-    {
-        // Take reference
-        auto &vertex = toPush[i];
-
-        // Move the position to the emitter's origin
-        vertex.position += mEmitterPosition - sf::Vector2f(0.f, buttonSize.y / 2.f);
-
-        const auto idx = offset + i;
-
-        // Change the color
-        vertex.color = getVertexColor(vertexArray, idx);        
-        // Assign the created vertex to the contrainer
-        vertexArray[idx] = vertex;
-    }
-}
-
-float GfxButton::RectEmitter::getConstantSpeedScale()
-{
-	// Originally the speed was 60px per frame, and the frame rate was capped to 60, 
-	// so by default it was travelling 3600px/s.
-	// Now that rendering frame rate is dynamic, the "speed" property defines
-	// pixels per second, not pixels per frame; to keep it compatible with older versions
-	// in terms of speed, convert the px/f speed to px/s
-	return 60.f;
-}
-
-void GfxButton::RectEmitter::create(float deltaSeconds, sf::Vector2f buttonSize)
-{
-    const auto isInSupportedRange = mBtnIdx < Settings::SupportedAdvancedKeysNumber;
-    const auto advMode = isInSupportedRange && Settings::KeyPressVisAdvSettingsMode;
-    const auto origSpeed = !advMode ? Settings::KeyPressVisSpeed : 
-        Settings::KeyPressVisAdvSpeed[mBtnIdx];
-    const auto speed = (-origSpeed * deltaSeconds * getConstantSpeedScale()) / 10.f;
-    // const auto wScale = (!advMode ? Settings::KeyPressWidthScale : Settings::KeyPressAdvWidthScale[mBtnIdx]) / 100.f;
-    // buttonSize.x *= wScale;
-
-    const auto rectSize = sf::Vector2f(buttonSize.x, speed);
-    const auto halfRectSize = rectSize / 2.f;
-
-    // const auto textureSize = static_cast<sf::Vector2f>(mTexture.getSize());
-
-    const auto rectIndex = mAvailableRectIndices.back();
-    const auto firstVertexIndex = rectIndex * 4ul;
-
-    // 0 Top left, 1 Top right, 2 Bottom right, 3 Bottom left
-    sf::Vertex middleVertices[4];
-
-    // middleVertices[0].position = sf::Vector2f(-halfRectSize.x, -halfRectSize.y);
-    // middleVertices[1].position = sf::Vector2f(+halfRectSize.x, -halfRectSize.y);
-    // middleVertices[2].position = sf::Vector2f(+halfRectSize.x, -halfRectSize.y);
-    // middleVertices[3].position = sf::Vector2f(-halfRectSize.x, -halfRectSize.y);
-
-    middleVertices[0].position = sf::Vector2f(-halfRectSize.x, -rectSize.y);
-    middleVertices[1].position = sf::Vector2f(+halfRectSize.x, -rectSize.y);
-    middleVertices[2].position = sf::Vector2f(+halfRectSize.x, 0.f);
-    middleVertices[3].position = sf::Vector2f(-halfRectSize.x, 0.f);
-
-    pushVertecies(mMiddleVertecies, middleVertices, firstVertexIndex, buttonSize);
-}
-
-void GfxButton::RectEmitter::scaleTexture(sf::Vector2f buttonSize)
-{
-    // const auto size = static_cast<sf::Vector2f>(mTexture.getSize());
-    // mTextureScale = sf::Vector2f(size.x / buttonSize.x, size.x / buttonSize.y);
-}
-
-// GfxButton::RectEmitter::RectEmitter(const sf::Texture &texture)
-GfxButton::RectEmitter::RectEmitter(unsigned btnIdx)
-: mBtnIdx(btnIdx)
-//, mTexture(texture) 
-// , mTopVertecies(sf::Quads, 1000u)
-, mMiddleVertecies(sf::Quads, 1000u)
-// , mBottomVertecies(sf::Quads, 1000u)
-{
-    const auto count = mMiddleVertecies.getVertexCount() / 4;
-    for (auto i = 0ul; i < count; ++i)
-        mAvailableRectIndices.emplace_back(i);
-}
-
-void GfxButton::RectEmitter::update(float deltaSeconds, bool keyState, bool prevKeyState)
-{
-    // Don't update anything if there is no active rectangles
-    if (mUsedRectIndices.empty())
-        return;
-
-    std::vector<size_t> toRemove;
-
-    const auto isInSupportedRange = mBtnIdx < Settings::SupportedAdvancedKeysNumber;
-    const auto advMode = isInSupportedRange && Settings::KeyPressVisAdvSettingsMode;
-    const auto origSpeed = !advMode ? Settings::KeyPressVisSpeed : 
-        Settings::KeyPressVisAdvSpeed[mBtnIdx];
-    const auto speed = (-origSpeed * deltaSeconds * getConstantSpeedScale()) / 10.f;
-    const auto len = !advMode ? Settings::KeyPressVisFadeLineLen : 
-        Settings::KeyPressVisAdvFadeLineLen[mBtnIdx];
-    const auto minHeight = !advMode ? Settings::KeyPressFixedHeight :
-        Settings::KeyPressAdvFixedHeight[mBtnIdx];
-
-    // Iterate through all rectangles
-    for (auto i : mUsedRectIndices)
-    {
-        // Flag which identifies if all the rectangle vertices are on the same height
-        auto eachVertexIsOnLimit = true;
-
-        // Iterate through all the rectangle vertices
-        const auto vertexIndex = i * 4ul;
-        for (auto j = vertexIndex; j < vertexIndex + 4ul; ++j)
-        {
-            // Take vertex reference
-            // auto &topSideVertex = mTopVertecies[j];
-            auto &middleVertex = mMiddleVertecies[j];
-            // auto &bottomSideVertex = mBottomVertecies[j];
-
-            // Limit the square to go beyond the line length
-            auto move = [len, speed, deltaSeconds] (sf::Vertex &vertex)
-                {
-                    vertex.position.y = -std::min(std::abs(vertex.position.y + speed * deltaSeconds * getConstantSpeedScale()), len);
-                };
-            // move(topSideVertex);
-            move(middleVertex);
-            // move(bottomSideVertex);
-
-            // Check if the current vertex is on the max height, do so only if previous were so
-            // if (eachVertexIsOnLimit)
-            // {
-            //     eachVertexIsOnLimit = std::abs(bottomSideVertex.position.y) 
-            //         == len;
-            // }
-            if (eachVertexIsOnLimit)
-            {
-                eachVertexIsOnLimit = std::abs(middleVertex.position.y) == len;
-            }
-
-            // Set the right alpha channel depending on the progress to the end of the fade out length line
-            // topSideVertex.color = getVertexColor(mTopVertecies, j);
-            middleVertex.color = getVertexColor(mMiddleVertecies, j);
-            // bottomSideVertex.color = getVertexColor(mBottomVertecies, j);
-        }
-
-        // All vertices are on the same height
-        if (eachVertexIsOnLimit)
-        {
-            // Add the rectangle index to available index list, add to list of rectangles to remove
-            mAvailableRectIndices.emplace_back(i);
-            toRemove.emplace_back(i);
-        }
-    }
-
-    // Iterate through all the indices of the rectangles to remove
-    for (auto i : toRemove)
-    {
-        // Remove every index that is equal to i
-        mUsedRectIndices.erase(std::remove(
-                mUsedRectIndices.begin(), mUsedRectIndices.end(), i), 
-            mUsedRectIndices.end());
-    }
-
-    // If a button is pressed don't let the spawning rectangle go away from the spawn point
-    if (keyState)
-    {
-        const auto offset = mUsedRectIndices.back() * 4ul;
-        mMiddleVertecies[offset + 2ul].position.y = 
-        mMiddleVertecies[offset + 3ul].position.y -= speed * deltaSeconds * getConstantSpeedScale();
-
-        if (minHeight > 0 && std::abs(mMiddleVertecies[offset].position.y) > minHeight)
-        {
-            mMiddleVertecies[offset + 2ul].position.y = 
-            mMiddleVertecies[offset + 3ul].position.y = mMiddleVertecies[offset].position.y + minHeight;
-        }
-    }
-
-    // Move the nearest rectangle up on release
-    if (prevKeyState && !keyState && !mUsedRectIndices.empty())
-    {
-        const auto offset = mUsedRectIndices.back() * 4ul;
-
-        mMiddleVertecies[offset + 2ul].position.y = 
-        mMiddleVertecies[offset + 3ul].position.y -= speed * deltaSeconds * getConstantSpeedScale();
-
-        if (minHeight > 0 && std::abs(mMiddleVertecies[offset].position.y) > minHeight)
-        {
-            mMiddleVertecies[offset + 2ul].position.y = 
-            mMiddleVertecies[offset + 3ul].position.y = mMiddleVertecies[offset].position.y + minHeight;
-        }
-    }
-}
-
-void GfxButton::RectEmitter::draw(sf::RenderTarget &target, sf::RenderStates states) const
-{
-    states.transform = getPressRectTransform(states.transform);
-
-    target.draw(mMiddleVertecies, states);
-
-    // states.texture = &mTexture;
-    // target.draw(mTopVertecies, states);
-    // target.draw(mBottomVertecies, states);
-}
-
-void GfxButton::RectEmitter::setPosition(sf::Vector2f position)
-{
-    mEmitterPosition = position;
-}
-
-void GfxButton::RectEmitter::pushVertecies(sf::VertexArray &vertexArray, sf::Vertex *toPush, size_t offset, sf::Vector2f buttonSize)
-{
-    for (auto i = 0ul; i < 4ul; ++i)
-    {
-        // Take reference
-        auto &vertex = toPush[i];
-
-        // Move the position to the emitter's origin
-        vertex.position += mEmitterPosition - sf::Vector2f(0.f, buttonSize.y / 2.f);
-
-        const auto idx = offset + i;
-
-        // Change the color
-        vertex.color = getVertexColor(vertexArray, idx);        
-        // Assign the created vertex to the contrainer
-        vertexArray[idx] = vertex;
-    }
-}
-
-float GfxButton::RectEmitter::getConstantSpeedScale()
-{
-	// Originally the speed was 60px per frame, and the frame rate was capped to 60, 
-	// so by default it was travelling 3600px/s.
-	// Now that rendering frame rate is dynamic, the "speed" property defines
-	// pixels per second, not pixels per frame; to keep it compatible with older versions
-	// in terms of speed, convert the px/f speed to px/s
-	return 60.f;
-}
-
-void GfxButton::RectEmitter::create(float deltaSeconds, sf::Vector2f buttonSize)
-{
-    const auto isInSupportedRange = mBtnIdx < Settings::SupportedAdvancedKeysNumber;
-    const auto advMode = isInSupportedRange && Settings::KeyPressVisAdvSettingsMode;
-    const auto origSpeed = !advMode ? Settings::KeyPressVisSpeed : 
-        Settings::KeyPressVisAdvSpeed[mBtnIdx];
-    const auto speed = (-origSpeed * deltaSeconds * getConstantSpeedScale()) / 10.f;
-    // const auto wScale = (!advMode ? Settings::KeyPressWidthScale : Settings::KeyPressAdvWidthScale[mBtnIdx]) / 100.f;
-    // buttonSize.x *= wScale;
-
-    const auto rectSize = sf::Vector2f(buttonSize.x, speed);
-    const auto halfRectSize = rectSize / 2.f;
-
-    // const auto textureSize = static_cast<sf::Vector2f>(mTexture.getSize());
-
-    const auto rectIndex = mAvailableRectIndices.back();
-    const auto firstVertexIndex = rectIndex * 4ul;
-
-    // 0 Top left, 1 Top right, 2 Bottom right, 3 Bottom left
-    sf::Vertex middleVertices[4];
-
-    // middleVertices[0].position = sf::Vector2f(-halfRectSize.x, -halfRectSize.y);
-    // middleVertices[1].position = sf::Vector2f(+halfRectSize.x, -halfRectSize.y);
-    // middleVertices[2].position = sf::Vector2f(+halfRectSize.x, -halfRectSize.y);
-    // middleVertices[3].position = sf::Vector2f(-halfRectSize.x, -halfRectSize.y);
-
-    middleVertices[0].position = sf::Vector2f(-halfRectSize.x, -rectSize.y);
-    middleVertices[1].position = sf::Vector2f(+halfRectSize.x, -rectSize.y);
-    middleVertices[2].position = sf::Vector2f(+halfRectSize.x, 0.f);
-    middleVertices[3].position = sf::Vector2f(-halfRectSize.x, 0.f);
-
-    pushVertecies(mMiddleVertecies, middleVertices, firstVertexIndex, buttonSize);
-}
-
-void GfxButton::RectEmitter::scaleTexture(sf::Vector2f buttonSize)
-{
-    // const auto size = static_cast<sf::Vector2f>(mTexture.getSize());
-    // mTextureScale = sf::Vector2f(size.x / buttonSize.x, size.x / buttonSize.y);
-}
-
-sf::Transform GfxButton::RectEmitter::getPressRectTransform(sf::Transform transform) const
-{
-    const auto isInSupportedRange = mBtnIdx < Settings::SupportedAdvancedKeysNumber;
-    const auto advMode = isInSupportedRange && Settings::KeyPressVisAdvSettingsMode;
-    const auto rot = !advMode ? Settings::KeyPressVisRotation : 
-        Settings::KeyPressVisAdvRotation[mBtnIdx];
-    const auto orig = Settings::KeyPressVisOrig + (advMode 
-        ? Settings::KeyPressVisAdvOrig[mBtnIdx] : sf::Vector2f());
-    const auto wScale = (!advMode ? Settings::KeyPressWidthScale : Settings::KeyPressAdvWidthScale[mBtnIdx]) / 100.f;
-
-    transform.rotate(-rot);
-    transform.translate(Utility::swapY(orig));
-    transform.scale(wScale, 1.f);
-    return transform;
-}
-
-float GfxButton::RectEmitter::getVertexProgress(size_t vertexNumber, float vertexHeight) const
-{
-    const auto isInSupportedRange = mBtnIdx < Settings::SupportedAdvancedKeysNumber;
-    const auto advMode = isInSupportedRange && Settings::KeyPressVisAdvSettingsMode;
-    const auto len = !advMode ? Settings::KeyPressVisFadeLineLen : 
-        Settings::KeyPressVisAdvFadeLineLen[mBtnIdx];
-
-    return std::min(mEmitterPosition.y - vertexHeight / len, 1.f);
-}
-
- sf::Color GfxButton::RectEmitter::getVertexColor(const sf::VertexArray &vertexArray, size_t vertexIndex) const
-{
-    const auto isInSupportedRange = mBtnIdx < Settings::SupportedAdvancedKeysNumber;
-    const auto advMode = isInSupportedRange && Settings::KeyPressVisAdvSettingsMode;
-    auto color = !advMode ? Settings::KeyPressVisColor : 
-        Settings::KeyPressVisAdvColor[mBtnIdx];
-
-    color.a -= color.a * getVertexProgress(vertexIndex, vertexArray[vertexIndex].position.y);
-    return color;
-}
 
         text->setFillColor(color);
         text->setCharacterSize(chSz);
@@ -1369,8 +309,8 @@ void GfxButton::scaleSprites()
     const auto advMode = isInSupportedRange && Settings::GfxButtonAdvancedMode;
 
     const auto btnTxtrSz = !advMode ? static_cast<sf::Vector2f>(Settings::GfxButtonTextureSize) : Settings::GfxButtonsSizes[mBtnIdx];
-    const auto btnTxtrScale = sf::Vector2f(btnTxtrSz.x / origBtnTxtrSz.x, btnTxtrSz.y / origBtnTxtrSz.y);
-    const auto aniTxtrScale = sf::Vector2f(btnTxtrSz.x / origAniTxtrSz.x, btnTxtrSz.y / origAniTxtrSz.y);
+    const auto btnTxtrScale = sf::Vector2f(btnTxtrSz.x / static_cast<float>(origBtnTxtrSz.x), btnTxtrSz.y / static_cast<float>(origBtnTxtrSz.y));
+    const auto aniTxtrScale = sf::Vector2f(btnTxtrSz.x / static_cast<float>(origAniTxtrSz.x), btnTxtrSz.y / static_cast<float>(origAniTxtrSz.y));
 
     buttonSprite.setScale(btnTxtrScale);
     animationSprite.setScale(aniTxtrScale);
@@ -1421,15 +361,15 @@ void GfxButton::centerOrigins()
 
 float GfxButton::getWidth(unsigned idx)
 {
-    const float width = Settings::WindowBonusSizeLeft + 
-        (Settings::GfxButtonTextureSize.x + Settings::GfxButtonDistance) * idx + 
-        Settings::GfxButtonTextureSize.x / 2;
+    const float width = static_cast<float>(Settings::WindowBonusSizeLeft) +
+        (static_cast<float>(Settings::GfxButtonTextureSize.x) + Settings::GfxButtonDistance) * static_cast<float>(idx) +
+        static_cast<float>(Settings::GfxButtonTextureSize.x) / 2.f;
     return width;
 }
 
-float GfxButton::getHeight(unsigned idx)
+float GfxButton::getHeight(unsigned /*idx*/)
 {
-    const float height = Settings::WindowBonusSizeTop + Settings::GfxButtonTextureSize.y / 2;
+    const float height = static_cast<float>(Settings::WindowBonusSizeTop) + static_cast<float>(Settings::GfxButtonTextureSize.y) / 2.f;
     return height;
 }
 
@@ -1694,7 +634,7 @@ void GfxButton::RectEmitter::create(float deltaSeconds, sf::Vector2f buttonSize)
     mUsedRectIndices.emplace_back(rectIndex);
 }
 
-void GfxButton::RectEmitter::scaleTexture(sf::Vector2f buttonSize)
+void GfxButton::RectEmitter::scaleTexture(sf::Vector2f /*buttonSize*/)
 {
     // const auto size = static_cast<sf::Vector2f>(mTexture.getSize());
     // mTextureScale = sf::Vector2f(size.x / buttonSize.x, size.x / buttonSize.y);
@@ -1716,7 +656,7 @@ sf::Transform GfxButton::RectEmitter::getPressRectTransform(sf::Transform transf
     return transform;
 }
 
-float GfxButton::RectEmitter::getVertexProgress(size_t vertexNumber, float vertexHeight) const
+float GfxButton::RectEmitter::getVertexProgress(size_t /*vertexNumber*/, float vertexHeight) const
 {
     const auto isInSupportedRange = mBtnIdx < Settings::SupportedAdvancedKeysNumber;
     const auto advMode = isInSupportedRange && Settings::KeyPressVisAdvSettingsMode;
@@ -1733,6 +673,160 @@ sf::Color GfxButton::RectEmitter::getVertexColor(const sf::VertexArray &vertexAr
     auto color = !advMode ? Settings::KeyPressVisColor : 
         Settings::KeyPressVisAdvColor[mBtnIdx];
 
-    color.a -= color.a * getVertexProgress(vertexIndex, vertexArray[vertexIndex].position.y);
+    color.a = static_cast<sf::Uint8>(color.a - color.a * getVertexProgress(vertexIndex, vertexArray[vertexIndex].position.y));
     return color;
+}
+
+void GfxButton::drawVectorShape(sf::RenderTarget &target, sf::RenderStates states, int shape, sf::Vector2f position, sf::Vector2f size, sf::Color fillColor, sf::Color outlineColor) const
+{
+    float outlineThickness = 3.f;
+    
+    sf::Vector2f adjPos = position + sf::Vector2f(outlineThickness / 2.f, outlineThickness / 2.f);
+    sf::Vector2f adjSize = size - sf::Vector2f(outlineThickness, outlineThickness);
+
+    if (shape == 1) // Rounded (drawn as Rectangle with outline for JKPS style)
+    {
+        sf::RectangleShape rect;
+        rect.setPosition(adjPos);
+        rect.setSize(adjSize);
+        rect.setFillColor(fillColor);
+        rect.setOutlineThickness(outlineThickness);
+        rect.setOutlineColor(outlineColor);
+        target.draw(rect, states);
+    }
+    else if (shape == 2) // Pill
+    {
+        float radius = adjSize.y / 2.f;
+        sf::RectangleShape rect;
+        rect.setPosition(adjPos.x + radius, adjPos.y);
+        rect.setSize(sf::Vector2f(adjSize.x - 2.f * radius, adjSize.y));
+        rect.setFillColor(fillColor);
+        rect.setOutlineThickness(outlineThickness);
+        rect.setOutlineColor(outlineColor);
+        target.draw(rect, states);
+
+        sf::CircleShape leftCap(radius);
+        leftCap.setPosition(adjPos.x, adjPos.y);
+        leftCap.setFillColor(fillColor);
+        leftCap.setOutlineThickness(outlineThickness);
+        leftCap.setOutlineColor(outlineColor);
+        target.draw(leftCap, states);
+
+        sf::CircleShape rightCap(radius);
+        rightCap.setPosition(adjPos.x + adjSize.x - 2.f * radius, adjPos.y);
+        rightCap.setFillColor(fillColor);
+        rightCap.setOutlineThickness(outlineThickness);
+        rightCap.setOutlineColor(outlineColor);
+        target.draw(rightCap, states);
+    }
+    else if (shape == 3) // Circle
+    {
+        float radius = std::min(adjSize.x, adjSize.y) / 2.f;
+        sf::CircleShape circle(radius);
+        circle.setPosition(adjPos.x + adjSize.x / 2.f - radius, adjPos.y + adjSize.y / 2.f - radius);
+        circle.setFillColor(fillColor);
+        circle.setOutlineThickness(outlineThickness);
+        circle.setOutlineColor(outlineColor);
+        target.draw(circle, states);
+    }
+    else if (shape == 4) // Diamond
+    {
+        sf::ConvexShape diamond;
+        diamond.setPointCount(4);
+        diamond.setPoint(0, sf::Vector2f(adjPos.x + adjSize.x / 2.f, adjPos.y));
+        diamond.setPoint(1, sf::Vector2f(adjPos.x + adjSize.x, adjPos.y + adjSize.y / 2.f));
+        diamond.setPoint(2, sf::Vector2f(adjPos.x + adjSize.x / 2.f, adjPos.y + adjSize.y));
+        diamond.setPoint(3, sf::Vector2f(adjPos.x, adjPos.y + adjSize.y / 2.f));
+        diamond.setFillColor(fillColor);
+        diamond.setOutlineThickness(outlineThickness);
+        diamond.setOutlineColor(outlineColor);
+        target.draw(diamond, states);
+    }
+    else if (shape == 5) // Star
+    {
+        float cx = adjPos.x + adjSize.x / 2.f;
+        float cy = adjPos.y + adjSize.y / 2.f;
+        float outerR = std::min(adjSize.x, adjSize.y) / 2.f;
+        float innerR = outerR * 0.4f;
+        sf::VertexArray star(sf::TriangleFan, 12);
+        star[0].position = {cx, cy};
+        star[0].color = fillColor;
+        for (int i = 0; i < 5; ++i)
+        {
+            float angle = -3.14159f / 2.f + static_cast<float>(i) * 2.f * 3.14159f / 5.f;
+            const auto outerIdx = static_cast<std::size_t>(i * 2 + 1);
+            const auto innerIdx = static_cast<std::size_t>(i * 2 + 2);
+            star[outerIdx].position = {cx + outerR * std::cos(angle), cy + outerR * std::sin(angle)};
+            star[outerIdx].color = fillColor;
+            float innerAngle = angle + 3.14159f / 5.f;
+            star[innerIdx].position = {cx + innerR * std::cos(innerAngle), cy + innerR * std::sin(innerAngle)};
+            star[innerIdx].color = fillColor;
+        }
+        target.draw(star, states);
+
+        sf::VertexArray outline(sf::LineStrip, 11);
+        for (int i = 0; i < 5; ++i)
+        {
+            float angle = -3.14159f / 2.f + static_cast<float>(i) * 2.f * 3.14159f / 5.f;
+            const auto outerIdx = static_cast<std::size_t>(i * 2);
+            const auto innerIdx = static_cast<std::size_t>(i * 2 + 1);
+            outline[outerIdx].position = {cx + outerR * std::cos(angle), cy + outerR * std::sin(angle)};
+            outline[outerIdx].color = outlineColor;
+            float innerAngle = angle + 3.14159f / 5.f;
+            outline[innerIdx].position = {cx + innerR * std::cos(innerAngle), cy + innerR * std::sin(innerAngle)};
+            outline[innerIdx].color = outlineColor;
+        }
+        outline[10].position = outline[0].position;
+        outline[10].color = outlineColor;
+        target.draw(outline, states);
+    }
+    else if (shape == 6) // Hexagon
+    {
+        sf::ConvexShape hex;
+        hex.setPointCount(6);
+        float cx = adjPos.x + adjSize.x / 2.f;
+        float cy = adjPos.y + adjSize.y / 2.f;
+        float radius = std::min(adjSize.x, adjSize.y) / 2.f;
+        for (int i = 0; i < 6; ++i)
+        {
+            float angle = static_cast<float>(i) * 3.14159f / 3.f;
+            hex.setPoint(static_cast<std::size_t>(i), sf::Vector2f(cx + radius * std::cos(angle), cy + radius * std::sin(angle)));
+        }
+        hex.setFillColor(fillColor);
+        hex.setOutlineThickness(outlineThickness);
+        hex.setOutlineColor(outlineColor);
+        target.draw(hex, states);
+    }
+    else if (shape == 7) // Triangle
+    {
+        sf::ConvexShape triangle;
+        triangle.setPointCount(3);
+        float cx = adjPos.x + adjSize.x / 2.f;
+        float cy = adjPos.y + adjSize.y / 2.f;
+        float radius = std::min(adjSize.x, adjSize.y) / 2.f;
+        triangle.setPoint(0, sf::Vector2f(cx, cy - radius));
+        triangle.setPoint(1, sf::Vector2f(cx + radius * 0.866f, cy + radius * 0.5f));
+        triangle.setPoint(2, sf::Vector2f(cx - radius * 0.866f, cy + radius * 0.5f));
+        triangle.setFillColor(fillColor);
+        triangle.setOutlineThickness(outlineThickness);
+        triangle.setOutlineColor(outlineColor);
+        target.draw(triangle, states);
+    }
+    else if (shape == 8) // Octagon
+    {
+        sf::ConvexShape octagon;
+        octagon.setPointCount(8);
+        float cx = adjPos.x + adjSize.x / 2.f;
+        float cy = adjPos.y + adjSize.y / 2.f;
+        float radius = std::min(adjSize.x, adjSize.y) / 2.f;
+        for (int i = 0; i < 8; ++i)
+        {
+            float angle = static_cast<float>(i) * 3.14159f / 4.f + 3.14159f / 8.f;
+            octagon.setPoint(static_cast<std::size_t>(i), sf::Vector2f(cx + radius * std::cos(angle), cy + radius * std::sin(angle)));
+        }
+        octagon.setFillColor(fillColor);
+        octagon.setOutlineThickness(outlineThickness);
+        octagon.setOutlineColor(outlineColor);
+        target.draw(octagon, states);
+    }
 }

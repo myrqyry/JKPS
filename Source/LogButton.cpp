@@ -13,12 +13,12 @@ unsigned LogButton::statTotal(0);
 float LogButton::statBeatsPerMinute(0);
 
 LogButton::LogButton(const unsigned idx, LogKey &key)
-: mState(false)
-, mLastAccumulateBpmBufferIndex(mBuffer.size())
-, mKey(key)
-, mKeysPerSecond(0)
+: mKey(key)
+, mKeysPerSecond(0.f)
 , mTotal(0)
 , mBtnIdx(idx)
+, mState(false)
+, mLastAccumulateBpmBufferIndex(60u)
 {
     statMaxKeysPerSecond = Settings::MaxKPS;
     statTotal = Settings::Total;
@@ -71,8 +71,8 @@ void LogButton::moveIndex()
         mBufferIndex = 0;
     if (++mPrevKpsBufferIndex == 7)
         mPrevKpsBufferIndex = 0;
-    
-	statBeatsPerMinute = 0;
+
+    statBeatsPerMinute = 0;
 }
 
 void LogButton::accumulateBeatsPerMinute()
@@ -86,7 +86,15 @@ void LogButton::accumulateBeatsPerMinute()
 
 void LogButton::reset()
 {
-    mKeysPerSecond = mTotal = statKeysPerSecond = statTotal = statBeatsPerMinute = statMaxKeysPerSecond = Settings::MaxKPS = Settings::Total = Settings::KeysTotal[mBtnIdx] = 0;
+    Settings::KeysTotal[mBtnIdx] = 0;
+    Settings::Total = 0;
+    Settings::MaxKPS = 0.f;
+    statMaxKeysPerSecond = 0.f;
+    statBeatsPerMinute = 0.f;
+    statTotal = 0;
+    statKeysPerSecond = 0.f;
+    mTotal = 0;
+    mKeysPerSecond = 0.f;
     for (auto &elem : mBuffer)
         elem = 0;
     for (auto &elem : mPrevKpsBuffer)
@@ -120,5 +128,5 @@ float LogButton::getLocalBeatsPerMinute() const
         prevKpsSum += elem;
 
     // 15 = 60 (sec) / 4 (1/4 time signature for streams)
-    return prevKpsSum / mPrevKpsBuffer.size() * 15;
+    return prevKpsSum / static_cast<float>(mPrevKpsBuffer.size()) * 15;
 }

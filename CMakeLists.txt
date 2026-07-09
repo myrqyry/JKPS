@@ -11,12 +11,15 @@ file(GLOB_RECURSE SRC_HEADERS "Headers/*.hpp")
 
 add_executable(${PROJECT_NAME} ${SRC_SOURCES} ${SRC_HEADERS})
 
+option(ENABLE_WERROR "Treat compiler warnings as errors" OFF)
+
 target_compile_options(
 	${PROJECT_NAME} PRIVATE
+    $<$<BOOL:${ENABLE_WERROR}>:-Werror>
     -Wall
     -Wextra
     -Wpedantic
-    
+
     -Wcast-align
     -Wcast-qual
     -Wconversion
@@ -28,6 +31,11 @@ target_compile_options(
     -Wredundant-decls
     -Wsign-conversion
     -Wsign-promo
+)
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_STRIP} $<TARGET_FILE:${PROJECT_NAME}>
+    COMMENT "Stripping debug symbols from ${PROJECT_NAME}"
 )
 
 

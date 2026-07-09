@@ -44,6 +44,9 @@ Application::Application()
     auto graph = std::make_unique<KeysPerSecondGraph>();
     mGraph = std::move(graph);
 
+    auto styleWizard = std::make_unique<StyleWizard>(mFonts, mTextures);
+    mStyleWizard = std::move(styleWizard);
+
     mMenu.saveConfig(mButtons);
 }
 
@@ -59,6 +62,7 @@ void Application::run()
 		timeSinceLastEventUpdate += dt;
 		timeSinceLastHooksUpdate += dt;
 
+		const sf::Time TimePerEventUpdate = sf::seconds(1.f / static_cast<float>(getRenderUpdateFrequency()));
 		while (true)
 		{
 			int updateType = UpdateType::None;
@@ -68,7 +72,6 @@ void Application::run()
 				updateType |= UpdateType::Hooks;
 			}
 
-			const sf::Time TimePerEventUpdate = sf::seconds(1.f / static_cast<float>(getRenderUpdateFrequency()));
 			if (timeSinceLastEventUpdate > TimePerEventUpdate)
 			{
 				timeSinceLastEventUpdate -= TimePerEventUpdate;
@@ -95,9 +98,14 @@ void Application::processInput(UpdateType type)
 		// Open/close other windows, add/rm keys
 		handleEvent();
 
+		if (mStyleWizard->resetApplyRequest())
+		{
+			mMenu.reloadConfig();
+			resetAssets();
+		}
+
 		// Update changed parameters
-		if (mMenu.isOpen())
-			unloadChangesQueue();
+		unloadChangesQueue();
 
 		// Update assets if there is a request
 		if (ParameterLine::resetRefreshState())
@@ -146,7 +154,7 @@ void Application::handleEvent()
                 }
             }
         }
-        
+
         if (event.type == sf::Event::KeyPressed)
         {
             const auto key = event.key;
@@ -155,13 +163,19 @@ void Application::handleEvent()
                 auto btnAmtChanged = false;
                 if (key.code == Settings::KeyToIncreaseKeys || key.code == Settings::AltKeyToIncreaseKeys)
                 {
-                    addButton(*new LogKey("A", "A", new sf::Keyboard::Key(sf::Keyboard::A), nullptr));
+                    {
+                        LogKey key("A", "A", new sf::Keyboard::Key(sf::Keyboard::A), nullptr);
+                        addButton(key);
+                    }
                     btnAmtChanged = true;
                 }
 
                 if (key.code == Settings::KeyToIncreaseButtons)
                 {
-                    addButton(*new LogKey("M Left", "M Left", nullptr, new sf::Mouse::Button(sf::Mouse::Left)));
+                    {
+                        LogKey key("M Left", "M Left", nullptr, new sf::Mouse::Button(sf::Mouse::Left));
+                        addButton(key);
+                    }
                     btnAmtChanged = true;
                 }
 
@@ -195,6 +209,14 @@ void Application::handleEvent()
                         mMenu.openWindow();
                 }
 
+                if (key.code == Settings::KeyToOpenStyleWizard)
+                {
+                    if (mStyleWizard->isWindowOpen())
+                        mStyleWizard->closeWindow();
+                    else
+                        mStyleWizard->openWindow(sf::Vector2i(mWindow.getPosition().x + 100, mWindow.getPosition().y + 100));
+                }
+
                 // if (key == Settings::KeyToOpenGraphWindow)
                 // {
                 //     if (mGraph->isOpen())
@@ -224,6 +246,12 @@ void Application::handleEvent()
             mWindow.close();
             return;
         }
+
+        if (event.type == sf::Event::Resized)
+        {
+            auto view = sf::View(sf::FloatRect(0.f, 0.f, static_cast<float>(getWindowWidth()), static_cast<float>(getWindowHeight())));
+            mWindow.setView(view);
+        }
     }
 }
 
@@ -241,6 +269,9 @@ void Application::update(float deltaSeconds, UpdateType type)
 
 		if (mKPSWindow->isOpen())
 			mKPSWindow->update();
+
+		if (mStyleWizard->isWindowOpen())
+			mStyleWizard->processInput();
 
 		// if (mGraph->isOpen())
 		//     mGraph->update();
@@ -273,7 +304,9 @@ void Application::render()
         mKPSWindow->render();
     if (mGraph->isOpen())
         mGraph->render();
-    
+    if (mStyleWizard->isWindowOpen())
+        mStyleWizard->render();
+
     mWindow.display();
 }
 
@@ -310,11 +343,11 @@ void Application::unloadChangesQueue()
         if (parameterIdMatches(pair.first))
         {
             mWindow.setSize(sf::Vector2u(getWindowWidth(), getWindowHeight()));
-            mWindow.setView(sf::View(sf::FloatRect(0.f, 0.f, mWindow.getSize().x, mWindow.getSize().y)));
+            mWindow.setView(sf::View(sf::FloatRect(0.f, 0.f, static_cast<float>(mWindow.getSize().x), static_cast<float>(mWindow.getSize().y))));
             mMenu.requestFocus();
         }
 
-        if (pair.first == LogicalParameter::ID::MainWndwTitleBar)
+        if (pair.first == LogicalParameter::ID::MainWndwTitleBar || pair.first == LogicalParameter::ID::MainWndwResizable)
         {
             openWindow();
         }
@@ -401,7 +434,7 @@ void Application::buildStatistics()
     using Ptr = std::unique_ptr<GfxStatisticsLine>;
     auto linePtr = Ptr();
     auto id = static_cast<unsigned>(GfxStatisticsLine::StatisticsID::KPS);
-    
+
     linePtr = Ptr(new GfxStatisticsLine(mFonts, Settings::ShowStatisticsKPS, static_cast<GfxStatisticsLine::StatisticsID>(id)));
     mStatistics[id] = std::move(linePtr);
     ++id;
@@ -433,19 +466,24 @@ void Application::buildButtons()
         addButton(logKeyQueue.front());
         logKeyQueue.pop();
     }
-    
-    // TODO remove *new LogKey, use smart ptrs instead
+
     if (mButtons.empty())
     {
-        addButton(*new LogKey("Z", "Z", new sf::Keyboard::Key(sf::Keyboard::Z), nullptr));
-        addButton(*new LogKey("X", "X", new sf::Keyboard::Key(sf::Keyboard::X), nullptr));
+        {
+            LogKey key("Z", "Z", new sf::Keyboard::Key(sf::Keyboard::Z), nullptr);
+            addButton(key);
+        }
+        {
+            LogKey key("X", "X", new sf::Keyboard::Key(sf::Keyboard::X), nullptr);
+            addButton(key);
+        }
     }
 }
 
 bool Application::isPressPerformedOnButton(unsigned &btnIdx) const
 {
     const auto size = Button::size();
-    for (auto i = 0ul; i < size; ++i)
+    for (auto i = 0u; i < size; ++i)
     {
         if (isMouseInRange(i))
         {
@@ -481,26 +519,32 @@ void Application::openWindow()
 {
     sf::Uint32 style;
 #ifdef _WIN32
-    style = Settings::WindowTitleBar ? sf::Style::Close : sf::Style::None;
-#elif linux
-    style = Settings::WindowTitleBar ? sf::Style::Default : sf::Style::None;
+    style = Settings::WindowTitleBar
+        ? (Settings::WindowResizable ? sf::Style::Close | sf::Style::Resize : sf::Style::Close)
+        : (Settings::WindowResizable ? sf::Style::Resize : sf::Style::None);
+#elif __linux__
+    style = Settings::WindowTitleBar
+        ? (Settings::WindowResizable ? sf::Style::Default : sf::Style::Close)
+        : (Settings::WindowResizable ? sf::Style::Resize : sf::Style::None);
 #else
 #error Unsupported compiler
 #endif
 
     if (mWindow.isOpen())
         mWindow.close();
-    mWindow.create(sf::VideoMode(getWindowWidth(), getWindowHeight()), "JKPS", style);
+    sf::ContextSettings settings;
+    settings.antialiasingLevel = 8;
+    mWindow.create(sf::VideoMode(getWindowWidth(), getWindowHeight()), "JKPS", style, settings);
     mWindow.setKeyRepeatEnabled(false);
     mWindow.setFramerateLimit(getApplicationUpdateFrequency());
-#ifdef linux
+#ifdef __linux__
     if (style == sf::Style::None)
     {
         auto desktop = sf::VideoMode::getDesktopMode();
-        auto windowSize = static_cast<sf::Vector2i>(mWindow.getSize());
+        auto windowSize = mWindow.getSize();
         mWindow.setPosition(sf::Vector2i(
-            desktop.width  / 2 - windowSize.x / 2, 
-            desktop.height / 2 - windowSize.y / 2));
+            static_cast<int>(desktop.width) / 2 - static_cast<int>(windowSize.x) / 2,
+            static_cast<int>(desktop.height) / 2 - static_cast<int>(windowSize.y) / 2));
     }
 #endif
 }
@@ -520,7 +564,7 @@ void Application::moveWindow()
     static auto mLastMousePosition = sf::Vector2i();
     if (mWindow.hasFocus() && sf::Mouse::isButtonPressed(sf::Mouse::Left))
     {
-        mWindow.setPosition(mWindow.getPosition() + 
+        mWindow.setPosition(mWindow.getPosition() +
             sf::Mouse::getPosition() - mLastMousePosition);
     }
     mLastMousePosition = sf::Mouse::getPosition();
@@ -528,39 +572,40 @@ void Application::moveWindow()
 
 unsigned Application::getWindowWidth()
 {
-    const auto btnAmt = static_cast<int>(Button::size());
-    const auto width = static_cast<int>(
-        Settings::GfxButtonTextureSize.x * btnAmt + 
-        (btnAmt - 1) * Settings::GfxButtonDistance + 
-        Settings::WindowBonusSizeLeft + Settings::WindowBonusSizeRight);
-    
-    return std::max(5, width);
+    const unsigned btnAmt = Button::size();
+    const float totalWidth =
+        static_cast<float>(Settings::GfxButtonTextureSize.x * btnAmt)
+        + static_cast<float>(static_cast<int>(btnAmt) - 1) * Settings::GfxButtonDistance
+        + static_cast<float>(Settings::WindowBonusSizeLeft + Settings::WindowBonusSizeRight);
+
+    return std::max(5u, static_cast<unsigned>(totalWidth));
 }
 
 unsigned Application::getWindowHeight()
 {
-    const auto height = static_cast<int>(
-        Settings::GfxButtonTextureSize.y + Settings::WindowBonusSizeTop + 
-        Settings::WindowBonusSizeBottom);
-    
-    return std::max(5, height);
+    const float totalHeight =
+        static_cast<float>(Settings::GfxButtonTextureSize.y)
+        + static_cast<float>(Settings::WindowBonusSizeTop + Settings::WindowBonusSizeBottom);
+
+    return std::max(5u, static_cast<unsigned>(totalHeight));
 }
 
 sf::IntRect Application::getWindowRect()
 {
-    return { { }, sf::Vector2i(getWindowWidth(), getWindowHeight()) };
+    return { { }, sf::Vector2i(static_cast<int>(getWindowWidth()), static_cast<int>(getWindowHeight())) };
 }
 
 bool Application::parameterIdMatches(LogicalParameter::ID id)
 {
     return
-        id == LogicalParameter::ID::BtnGfxTxtrSz ||  
+        id == LogicalParameter::ID::BtnGfxTxtrSz ||
         id == LogicalParameter::ID::BtnTextChSz ||
         id == LogicalParameter::ID::BtnGfxDist  ||
         id == LogicalParameter::ID::MainWndwTop ||
         id == LogicalParameter::ID::MainWndwBot ||
         id == LogicalParameter::ID::MainWndwLft ||
-        id == LogicalParameter::ID::MainWndwRght;
+        id == LogicalParameter::ID::MainWndwRght ||
+        id == LogicalParameter::ID::MainWndwResizable;
 }
 
 unsigned Application::getRenderUpdateFrequency() const

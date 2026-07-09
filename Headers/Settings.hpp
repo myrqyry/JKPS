@@ -93,12 +93,32 @@ namespace Settings
     extern std::string GfxButtonTexturePath;
     extern sf::Vector2u GfxButtonTextureSize;
     extern sf::Color GfxButtonTextureColor;
+    extern sf::Color GfxButtonBorderColor;
+    extern int ButtonShape;
 
     // [Button graphics advanced settings]
     extern bool GfxButtonAdvancedMode;
     extern Container<sf::Vector2f> GfxButtonsBtnPositions;
     extern Container<sf::Vector2f> GfxButtonsSizes;
     extern Container<sf::Color> GfxButtonsColor;
+
+    // [Button graphics scaling]
+    extern float GfxButtonScaleFactor;
+    extern float GfxButtonAnimationScaleFactor;
+    extern float GfxButtonTextScaleFactor;
+    extern float GfxButtonMinScale;
+    extern float GfxButtonMaxScale;
+    extern Container<float> GfxButtonAdvScaleFactor;
+    extern Container<float> GfxButtonAdvAnimationScaleFactor;
+    extern Container<float> GfxButtonAdvTextScaleFactor;
+
+    // [Theme system]
+    extern int CurrentThemeIndex;
+
+    // [Overlay settings]
+    extern bool IsOverlayApplication;
+    extern float OverlayScaleFactor;
+    extern float GlobalScaleFactor;
 
     // [Animation graphics]
     extern bool LightAnimation;
@@ -119,6 +139,7 @@ namespace Settings
 
     // [Main window]
     extern bool WindowTitleBar;
+    extern bool WindowResizable;
 	extern unsigned RenderUpdateFrequency;
     extern int WindowBonusSizeTop;
     extern int WindowBonusSizeBottom;
@@ -185,6 +206,7 @@ namespace Settings
     extern sf::Keyboard::Key KeyToOpenKPSWindow;
     extern sf::Keyboard::Key KeyToOpenMenuWindow;
     extern sf::Keyboard::Key KeyToOpenGraphWindow;
+    extern sf::Keyboard::Key KeyToOpenStyleWizard;
 
     // Saved parameters
     extern float MaxKPS;

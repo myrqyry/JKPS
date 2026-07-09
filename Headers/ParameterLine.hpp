@@ -355,6 +355,8 @@ class ParameterLine : public sf::Drawable, public sf::Transformable, public std:
             BtnGfxTxtr,
             BtnGfxTxtrSz,
             BtnGfxTxtrClr,
+            BtnGfxBorderClr,
+            BtnGfxShape,
             BtnGfxMty,
 
             BtnGfxAdvColl,
@@ -443,6 +445,7 @@ class ParameterLine : public sf::Drawable, public sf::Transformable, public std:
             BgClr,
             BgScale,
             MainWndwTitleBar,
+            MainWndwResizable,
 			RenderUpdateFrequency,
             MainWndwTop,
             MainWndwBot,
