@@ -1,0 +1,11 @@
+# Build output
+build/
+
+# Local binaries
+JKPS
+JKPS.exe
+
+# Local config/runtime state
+JKPS.cfg
+SESSION-STATE.md
+build_log.txt

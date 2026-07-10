@@ -212,4 +212,20 @@ namespace Settings
     extern float MaxKPS;
     extern unsigned Total;
     extern Container<unsigned> KeysTotal;
+
+    // [UI design tokens]
+    // A small, shared vocabulary for the visual system. These are the canonical
+    // knobs the redesign builds on; the many fine-grained settings above remain
+    // for backwards compatibility and advanced per-element overrides. New layout
+    // code should prefer these tokens so styling stays coherent across the
+    // overlay and the secondary windows.
+    namespace UiTokens
+    {
+        extern float BaseSpacing;
+        extern unsigned PrimaryTextSize;
+        extern unsigned SecondaryTextSize;
+        extern sf::Color SurfaceColor;
+        extern sf::Color AccentColor;
+        extern sf::Color BorderColor;
+    }
 }

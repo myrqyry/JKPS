@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include <string>
+#include <variant>
 
 
 struct LogicalParameter
@@ -619,20 +620,23 @@ struct LogicalParameter
             SaveStatTotal20,
         };
 
-        union Val
-        {
-            unsigned *uP;
-            int *iP;
-            bool *bP;
-            float *fP;
-            std::string *sP;
-            sf::Color *cP;
-            sf::Vector2u *vUp;
-            sf::Vector2i *vIp;
-            sf::Vector2f *vFp;
-        };
+        // Type-safe replacement for the former `void*` + union. The active
+        // alternative is chosen at the call site, so passing a pointer whose
+        // type does not match one of these alternatives is a compile error.
+        // std::monostate represents "no value" (Empty / Collection / Hint).
+        using ValuePtr = std::variant<
+            std::monostate,
+            unsigned *,
+            int *,
+            bool *,
+            float *,
+            std::string *,
+            sf::Color *,
+            sf::Vector2u *,
+            sf::Vector2i *,
+            sf::Vector2f *>;
 
-        LogicalParameter(Type type, void *valPtr, const std::string &parName = "", const std::string &defVal = "", 
+        LogicalParameter(Type type, ValuePtr valPtr, const std::string &parName = "", const std::string &defVal = "", 
             float lowLimits = 0.f, float highLimits = 0.f, const std::string &val = "");
 
         template <typename T>
@@ -679,7 +683,7 @@ struct LogicalParameter
         bool mChanged;
 
     private:
-        Val mVal;
+        ValuePtr mVal;
         const std::string mDefValStr;
         std::string mValStr;
 };
@@ -698,16 +702,16 @@ void LogicalParameter::setDigit(T var)
     switch(mType)
     {
 		case Type::Unsigned: 
-			*mVal.uP = static_cast<unsigned>(clamp<float>(static_cast<float>(var), mLowLimits, mHighLimits));
-			mValStr = std::to_string(static_cast<int>(*mVal.uP));
+			*std::get<unsigned *>(mVal) = static_cast<unsigned>(clamp<float>(static_cast<float>(var), mLowLimits, mHighLimits));
+			mValStr = std::to_string(static_cast<int>(*std::get<unsigned *>(mVal)));
 			break;
         case Type::Int: 
-			*mVal.iP = static_cast<int>(clamp<float>(static_cast<float>(var), mLowLimits, mHighLimits));
-			mValStr = std::to_string(static_cast<int>(*mVal.iP));
+			*std::get<int *>(mVal) = static_cast<int>(clamp<float>(static_cast<float>(var), mLowLimits, mHighLimits));
+			mValStr = std::to_string(static_cast<int>(*std::get<int *>(mVal)));
 			break;
         case Type::Float: 
-			*mVal.fP = clamp<float>(static_cast<float>(var), mLowLimits, mHighLimits);
-			mValStr = std::to_string(static_cast<int>(*mVal.fP)); /*+ 1 dec digit*/
+			*std::get<float *>(mVal) = clamp<float>(static_cast<float>(var), mLowLimits, mHighLimits);
+			mValStr = std::to_string(static_cast<int>(*std::get<float *>(mVal))); /*+ 1 dec digit*/
 			break;
         
         default: break;
@@ -722,9 +726,9 @@ void LogicalParameter::setVector(T vec)
 
     switch(mType)
     {
-        case Type::VectorU: mVal.vUp->x = static_cast<unsigned>(vec.x); mVal.vUp->y = static_cast<unsigned>(vec.y); break;
-        case Type::VectorI: mVal.vIp->x = static_cast<int>(vec.x); mVal.vIp->y = static_cast<int>(vec.y); break;
-        case Type::VectorF: mVal.vFp->x = vec.x; mVal.vFp->y = vec.y; break;
+        case Type::VectorU: std::get<sf::Vector2u *>(mVal)->x = static_cast<unsigned>(vec.x); std::get<sf::Vector2u *>(mVal)->y = static_cast<unsigned>(vec.y); break;
+        case Type::VectorI: std::get<sf::Vector2i *>(mVal)->x = static_cast<int>(vec.x); std::get<sf::Vector2i *>(mVal)->y = static_cast<int>(vec.y); break;
+        case Type::VectorF: std::get<sf::Vector2f *>(mVal)->x = vec.x; std::get<sf::Vector2f *>(mVal)->y = vec.y; break;
 
         default: break;
     }
@@ -740,10 +744,10 @@ T LogicalParameter::getDigit() const
 
     switch(mType)
     {
-        case Type::Unsigned: return static_cast<T>(*mVal.uP);
-        case Type::Int: return static_cast<T>(*mVal.iP);
-        case Type::Bool: return static_cast<T>(*mVal.bP);
-        case Type::Float: return static_cast<T>(*mVal.fP);
+        case Type::Unsigned: return static_cast<T>(*std::get<unsigned *>(mVal));
+        case Type::Int: return static_cast<T>(*std::get<int *>(mVal));
+        case Type::Bool: return static_cast<T>(*std::get<bool *>(mVal));
+        case Type::Float: return static_cast<T>(*std::get<float *>(mVal));
         default: return T{};
     }
 }
@@ -755,9 +759,9 @@ T LogicalParameter::getVector() const
 
     switch(mType)
     {
-        case Type::VectorU: return *mVal.vUp;
-        case Type::VectorI: return *mVal.vIp;
-        case Type::VectorF: return *mVal.vFp;
+        case Type::VectorU: return *std::get<sf::Vector2u *>(mVal);
+        case Type::VectorI: return *std::get<sf::Vector2i *>(mVal);
+        case Type::VectorF: return *std::get<sf::Vector2f *>(mVal);
         default: return T(-1, -1);
     }
 }

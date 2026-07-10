@@ -3,15 +3,18 @@
 
 #include <string.h>
 #include <iostream>
+#include <algorithm>
+#include <cctype>
 
 
-LogicalParameter::LogicalParameter(Type type, void *valPtr, const std::string &parName, const std::string &defVal, 
+LogicalParameter::LogicalParameter(Type type, ValuePtr valPtr, const std::string &parName, const std::string &defVal, 
     float lowLimits, float highLimits, const std::string &val)
 : mType(type)
 , mParName(parName)
 , mLowLimits(lowLimits)
 , mHighLimits(highLimits)
 , mChanged(false)
+, mVal(valPtr)
 , mDefValStr(defVal)
 { 
     if (type != Type::Bool && type != Type::String && type != Type::StringPath)
@@ -33,48 +36,39 @@ LogicalParameter::LogicalParameter(Type type, void *valPtr, const std::string &p
     switch(type)
     {
         case Type::Unsigned: 
-            mVal.uP = static_cast<unsigned*>(valPtr); 
             setDigit<unsigned>(static_cast<unsigned>(std::stoi(defVal)));
             break;
             
         case Type::Int: 
-            mVal.iP = static_cast<int*>(valPtr);
             setDigit<int>(std::stoi(defVal)); 
             break;
 
         case Type::Bool: 
-            mVal.bP = static_cast<bool*>(valPtr);
             setBool(defVal); 
             break;
 
         case Type::Float: 
-            mVal.fP = static_cast<float*>(valPtr); 
-            setDigit<float>(static_cast<float>(std::stoi(defVal)));
+            setDigit<float>(std::stof(defVal));
             break;
 
         case Type::String: 
         case Type::StringPath:
-            mVal.sP = static_cast<std::string*>(valPtr);
             setString(defVal); 
             break;
 
         case Type::Color: 
-            mVal.cP = static_cast<sf::Color*>(valPtr); 
             setColor(ConfigHelper::readColorParameter(*this, defVal));
             break;
 
         case Type::VectorU: 
-            mVal.vUp = static_cast<sf::Vector2u*>(valPtr); 
             setVector(ConfigHelper::readVectorParameter(*this, defVal));
             break;
 
         case Type::VectorI: 
-            mVal.vIp = static_cast<sf::Vector2i*>(valPtr); 
             setVector(ConfigHelper::readVectorParameter(*this, defVal));
             break;
 
         case Type::VectorF: 
-            mVal.vFp = static_cast<sf::Vector2f*>(valPtr); 
             setVector(ConfigHelper::readVectorParameter(*this, defVal));
             break;
 
@@ -86,13 +80,14 @@ void LogicalParameter::setColor(sf::Color color)
 {
     assert(mType == Type::Color);
 
-    *mVal.cP = color;
+    auto *cP = std::get<sf::Color *>(mVal);
+    *cP = color;
 
     mValStr = 
-        std::to_string(static_cast<int>(mVal.cP->r)) + ',' + 
-        std::to_string(static_cast<int>(mVal.cP->g)) + ',' + 
-        std::to_string(static_cast<int>(mVal.cP->b)) + ',' + 
-        std::to_string(static_cast<int>(mVal.cP->a));
+        std::to_string(static_cast<int>(cP->r)) + ',' + 
+        std::to_string(static_cast<int>(cP->g)) + ',' + 
+        std::to_string(static_cast<int>(cP->b)) + ',' + 
+        std::to_string(static_cast<int>(cP->a));
     mChanged = true;
 }
 
@@ -101,20 +96,21 @@ void LogicalParameter::setColor(const std::string &str, unsigned idx)
     assert(mType == Type::Color);
     assert(idx <= 3u);
 
+    auto *cP = std::get<sf::Color *>(mVal);
     unsigned char c = static_cast<unsigned char>(std::stoi(str));
     switch (idx)
     {
-        case 0: mVal.cP->r = c; break;
-        case 1: mVal.cP->g = c; break;
-        case 2: mVal.cP->b = c; break;
-        case 3: mVal.cP->a = c; break;
+        case 0: cP->r = c; break;
+        case 1: cP->g = c; break;
+        case 2: cP->b = c; break;
+        case 3: cP->a = c; break;
         default: break;
     }
     mValStr = 
-        std::to_string(static_cast<int>(mVal.cP->r)) + ',' + 
-        std::to_string(static_cast<int>(mVal.cP->g)) + ',' + 
-        std::to_string(static_cast<int>(mVal.cP->b)) + ',' + 
-        std::to_string(static_cast<int>(mVal.cP->a));
+        std::to_string(static_cast<int>(cP->r)) + ',' + 
+        std::to_string(static_cast<int>(cP->g)) + ',' + 
+        std::to_string(static_cast<int>(cP->b)) + ',' + 
+        std::to_string(static_cast<int>(cP->a));
     mChanged = true;
 }
 
@@ -126,28 +122,37 @@ void LogicalParameter::setVector(const std::string &str, unsigned idx)
     switch(mType)
     {
         case Type::VectorU: 
-            switch(idx)
             {
-                case 0: mVal.vUp->x = static_cast<unsigned>(std::stoi(str)); break;
-                case 1: mVal.vUp->y = static_cast<unsigned>(std::stoi(str)); break;
+                auto *vUp = std::get<sf::Vector2u *>(mVal);
+                switch(idx)
+                {
+                    case 0: vUp->x = static_cast<unsigned>(std::stoi(str)); break;
+                    case 1: vUp->y = static_cast<unsigned>(std::stoi(str)); break;
+                }
+                mValStr = std::to_string(vUp->x) + ',' + std::to_string(vUp->y);
             }
-            mValStr = std::to_string(mVal.vUp->x) + ',' + std::to_string(mVal.vUp->y);
             break;
         case Type::VectorI: 
-            switch(idx)
             {
-                case 0: mVal.vIp->x = std::stoi(str); break;
-                case 1: mVal.vIp->y = std::stoi(str); break;
+                auto *vIp = std::get<sf::Vector2i *>(mVal);
+                switch(idx)
+                {
+                    case 0: vIp->x = std::stoi(str); break;
+                    case 1: vIp->y = std::stoi(str); break;
+                }
+                mValStr = std::to_string(vIp->x) + ',' + std::to_string(vIp->y);
             }
-            mValStr = std::to_string(mVal.vIp->x) + ',' + std::to_string(mVal.vIp->y);
             break;
         case Type::VectorF: 
-            switch(idx)
             {
-                case 0: mVal.vFp->x = static_cast<float>(std::stoi(str)); break;
-                case 1: mVal.vFp->y = static_cast<float>(std::stoi(str)); break;
+                auto *vFp = std::get<sf::Vector2f *>(mVal);
+                switch(idx)
+                {
+                    case 0: vFp->x = static_cast<float>(std::stof(str)); break;
+                    case 1: vFp->y = static_cast<float>(std::stof(str)); break;
+                }
+                mValStr = std::to_string(static_cast<int>(vFp->x)) + ',' + std::to_string(static_cast<int>(vFp->y));
             }
-            mValStr = std::to_string(static_cast<int>(mVal.vFp->x)) + ',' + std::to_string(static_cast<int>(mVal.vFp->y));
             break;
         default: break;
     }
@@ -163,8 +168,11 @@ void LogicalParameter::setBool(const std::string &str)
     ||  str == "True" || str == "False"
     ||  str == "TRUE" || str == "FALSE");
 
-    // "true" - 4 characters. "false" - 5 characters
-    *mVal.bP = str.size() == 4;
+    std::string lower(str);
+    std::transform(lower.begin(), lower.end(), lower.begin(),
+        [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+    *std::get<bool *>(mVal) = (lower == "true");
     mValStr = str;
     mChanged = true;
 }
@@ -172,7 +180,7 @@ void LogicalParameter::setBool(const std::string &str)
 void LogicalParameter::setBool(bool b)
 {
     assert(mType == Type::Bool);
-    *mVal.bP = b;
+    *std::get<bool *>(mVal) = b;
     mValStr = b ? "True" : "False";
     mChanged = true;
 }
@@ -180,7 +188,7 @@ void LogicalParameter::setBool(bool b)
 void LogicalParameter::setString(const std::string &str)
 {
     assert(mType == Type::String || mType == Type::StringPath);
-    *mVal.sP = str;
+    *std::get<std::string *>(mVal) = str;
     mValStr = str;
     mChanged = true;
 }
@@ -188,19 +196,19 @@ void LogicalParameter::setString(const std::string &str)
 bool LogicalParameter::getBool() const
 {
     assert(mType == Type::Bool);
-    return *mVal.bP;
+    return *std::get<bool *>(mVal);
 }
 
 std::string LogicalParameter::getString() const
 {
     assert(mType == Type::String || mType == Type::StringPath);
-    return *mVal.sP;
+    return *std::get<std::string *>(mVal);
 }
 
 sf::Color LogicalParameter::getColor() const
 {
     assert(mType == Type::Color);
-    return *mVal.cP;
+    return *std::get<sf::Color *>(mVal);
 }
 
 std::string LogicalParameter::getValPt(int pt) const
@@ -228,8 +236,8 @@ void LogicalParameter::setValStr(const std::string &str, unsigned idx)
     switch (mType)
     {
         case LogicalParameter::Type::Unsigned:
-        case LogicalParameter::Type::Int:
-        case LogicalParameter::Type::Float: setDigit(std::stoi(str)); break;
+        case LogicalParameter::Type::Int: setDigit(std::stoi(str)); break;
+        case LogicalParameter::Type::Float: setDigit(std::stof(str)); break;
         case LogicalParameter::Type::Bool: setBool(str); break;
         case LogicalParameter::Type::String:
         case LogicalParameter::Type::StringPath: setString(str); break;
@@ -280,7 +288,7 @@ void LogicalParameter::resetToDefaultValue()
             break;
 
         case Type::Float: 
-            setDigit<float>(static_cast<float>(std::stoi(mDefValStr))); 
+            setDigit<float>(std::stof(mDefValStr)); 
             break;
 
         case Type::String: 

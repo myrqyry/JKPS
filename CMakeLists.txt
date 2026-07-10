@@ -6,8 +6,8 @@ project(JKPS CXX)
 file(GLOB PROJECT_SOURCE_DIR "Source")
 include_directories(${PROJECT_SOURCE_DIR})
 
-file(GLOB_RECURSE SRC_SOURCES "Source/*.cpp")
-file(GLOB_RECURSE SRC_HEADERS "Headers/*.hpp")
+file(GLOB_RECURSE SRC_SOURCES CONFIGURE_DEPENDS "Source/*.cpp")
+file(GLOB_RECURSE SRC_HEADERS CONFIGURE_DEPENDS "Headers/*.hpp")
 
 add_executable(${PROJECT_NAME} ${SRC_SOURCES} ${SRC_HEADERS})
 

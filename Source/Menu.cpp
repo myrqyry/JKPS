@@ -745,126 +745,126 @@ void Menu::buildParameterLines()
     
     using sPtr = std::shared_ptr<LogicalParameter>;
     sPtr parP = nullptr;
-    sPtr emptyP(new LogicalParameter(LogicalParameter::Type::Empty, nullptr));
+    sPtr emptyP(new LogicalParameter(LogicalParameter::Type::Empty, std::monostate{}));
     size_t collectionNameIdx = 0u;
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, mCollectionNames.at(collectionNameIdx++)));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, mCollectionNames.at(collectionNameIdx++)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::StatTextColl, new ParameterLine(parP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::StatTextMty, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, mCollectionNames.at(collectionNameIdx++)));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, mCollectionNames.at(collectionNameIdx++)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::StatTextAdvColl, new ParameterLine(parP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::StatTextSpace1, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::StatTextAdvMty, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, mCollectionNames.at(collectionNameIdx++)));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, mCollectionNames.at(collectionNameIdx++)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::StatTextAdvStrColl, new ParameterLine(parP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::StatTextAdvStrMty, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, mCollectionNames.at(collectionNameIdx++)));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, mCollectionNames.at(collectionNameIdx++)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::BtnTextColl, new ParameterLine(parP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::BtnTextMty, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, mCollectionNames.at(collectionNameIdx++)));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, mCollectionNames.at(collectionNameIdx++)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::BtnTextAdvColl, new ParameterLine(parP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::BtnTextAdvSpace1, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::BtnTextAdvSpace2, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::BtnTextAdvSpace3, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::BtnTextAdvMty, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, mCollectionNames.at(collectionNameIdx++)));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, mCollectionNames.at(collectionNameIdx++)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::BtnGfxColl, new ParameterLine(parP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::BtnGfxMty, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, mCollectionNames.at(collectionNameIdx++)));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, mCollectionNames.at(collectionNameIdx++)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::BtnGfxAdvColl, new ParameterLine(parP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::BtnGfxSpace, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::BtnGfxAdvMty, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, mCollectionNames.at(collectionNameIdx++)));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, mCollectionNames.at(collectionNameIdx++)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::AnimGfxColl, new ParameterLine(parP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::AnimGfxMty, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, mCollectionNames.at(collectionNameIdx++)));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, mCollectionNames.at(collectionNameIdx++)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::AnimGfxLightColl, new ParameterLine(parP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::AnimGfxLightMty, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, mCollectionNames.at(collectionNameIdx++)));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, mCollectionNames.at(collectionNameIdx++)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::AnimGfxPressColl, new ParameterLine(parP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::AnimGfxPressMty, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, mCollectionNames.at(collectionNameIdx++)));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, mCollectionNames.at(collectionNameIdx++)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::MainWndwColl, new ParameterLine(parP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::MainWndwMty, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, mCollectionNames.at(collectionNameIdx++)));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, mCollectionNames.at(collectionNameIdx++)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::KPSWndwColl, new ParameterLine(parP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::KPSWndwMty, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Hint, nullptr, "Hint: Increase window size in \"Main window\" to see effect of this feature!"));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Hint, std::monostate{}, "Hint: Increase window size in \"Main window\" to see effect of this feature!"));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::KeyPressVisHint, new ParameterLine(parP, mFonts, mTextures, mWindow)));
     mParameterLines[ParameterLine::ID::KeyPressVisHint]->setCharacterSize(17u);
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, mCollectionNames.at(collectionNameIdx++)));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, mCollectionNames.at(collectionNameIdx++)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::KeyPressVisColl, new ParameterLine(parP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::KeyPressVisMty, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, mCollectionNames.at(collectionNameIdx++)));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, mCollectionNames.at(collectionNameIdx++)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::KeyPressVisAdvModeColl, new ParameterLine(parP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::KeyPressVisAdvModeSpace, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::KeyPressVisAdvModeMty, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, mCollectionNames.at(collectionNameIdx++)));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, mCollectionNames.at(collectionNameIdx++)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::OtherColl, new ParameterLine(parP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::OtherMty, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, mCollectionNames.at(collectionNameIdx++)));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, mCollectionNames.at(collectionNameIdx++)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::SaveStatColl, new ParameterLine(parP, mFonts, mTextures, mWindow)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::SaveStatMty, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
 
 
     unsigned info = static_cast<unsigned>(ParameterLine::ID::InfoColl);
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, "                            Quick Guide"));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, "                            Quick Guide"));
     mParameterLines.emplace(std::make_pair(static_cast<ParameterLine::ID>(info++), new ParameterLine(parP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, "Click with right mouse button on the key to edit it, then a menu"));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, "Click with right mouse button on the key to edit it, then a menu"));
     mParameterLines.emplace(std::make_pair(static_cast<ParameterLine::ID>(info++), new ParameterLine(parP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, "will pop out. It has 2 fields. First one means the logical key,"));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, "will pop out. It has 2 fields. First one means the logical key,"));
     mParameterLines.emplace(std::make_pair(static_cast<ParameterLine::ID>(info++), new ParameterLine(parP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, "the second one is the visual one - how the key will be displayed."));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, "the second one is the visual one - how the key will be displayed."));
     mParameterLines.emplace(std::make_pair(static_cast<ParameterLine::ID>(info++), new ParameterLine(parP, mFonts, mTextures, mWindow)));
 
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::InfoMty, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
 
 
     unsigned hotKey = static_cast<unsigned>(ParameterLine::ID::HotKey1);
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, "[Hotkeys]"));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, "[Hotkeys]"));
     mParameterLines.emplace(std::make_pair(static_cast<ParameterLine::ID>(hotKey++), new ParameterLine(parP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, "Ctrl + \"+/-\" - Add/remove keyboard keys"));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, "Ctrl + \"+/-\" - Add/remove keyboard keys"));
     mParameterLines.emplace(std::make_pair(static_cast<ParameterLine::ID>(hotKey++), new ParameterLine(parP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, "Ctrl + \"</>\" - Add/remove mouse buttons"));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, "Ctrl + \"</>\" - Add/remove mouse buttons"));
     mParameterLines.emplace(std::make_pair(static_cast<ParameterLine::ID>(hotKey++), new ParameterLine(parP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, "Ctrl + W - Close the program"));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, "Ctrl + W - Close the program"));
     mParameterLines.emplace(std::make_pair(static_cast<ParameterLine::ID>(hotKey++), new ParameterLine(parP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, "Ctrl + X - Reset all the statistics"));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, "Ctrl + X - Reset all the statistics"));
     mParameterLines.emplace(std::make_pair(static_cast<ParameterLine::ID>(hotKey++), new ParameterLine(parP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, "Ctrl + A - Open graphical menu"));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, "Ctrl + A - Open graphical menu"));
     mParameterLines.emplace(std::make_pair(static_cast<ParameterLine::ID>(hotKey++), new ParameterLine(parP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, "Ctrl + K - Open KPS extra window"));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, "Ctrl + K - Open KPS extra window"));
     mParameterLines.emplace(std::make_pair(static_cast<ParameterLine::ID>(hotKey++), new ParameterLine(parP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, "Alt (hold) - Show opposite buttons values"));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, "Alt (hold) - Show opposite buttons values"));
     mParameterLines.emplace(std::make_pair(static_cast<ParameterLine::ID>(hotKey++), new ParameterLine(parP, mFonts, mTextures, mWindow)));
 
-    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, nullptr, "Program version: " + std::string(PROGRAM_VERSION)));
+    parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, "Program version: " + std::string(PROGRAM_VERSION)));
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::ProgramVersion, new ParameterLine(parP, mFonts, mTextures, mWindow)));
 
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::LastLine, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));

@@ -9,7 +9,7 @@
 class Button : public LogButton, public GfxButton
 {
     public:
-        Button(LogKey &key, const TextureHolder &textureHolder, const FontHolder &fontHolder);
+        Button(unsigned idx, LogKey &key, const TextureHolder &textureHolder, const FontHolder &fontHolder);
 
         void update(float deltaSeconds);
         void processInput();
@@ -20,6 +20,7 @@ class Button : public LogButton, public GfxButton
 
         unsigned getIdx() const;
         static unsigned size();
+        static void setCount(unsigned count);
         static bool parameterIdMatches(LogicalParameter::ID id);
 
         ~Button();
@@ -37,4 +38,10 @@ class Button : public LogButton, public GfxButton
         const FontHolder &mFonts;
 
         const unsigned mBtnIdx;
+
+        // Layout caching: text bounds/origins are only recomputed when the
+        // displayed strings, character size, or key state actually change,
+        // instead of every frame.
+        bool mTextLayoutDirty;
+        unsigned mCachedCharSize;
 };

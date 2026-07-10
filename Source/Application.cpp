@@ -4,7 +4,6 @@
 #include "../Headers/ChangedParametersQueue.hpp"
 #include "../Headers/Settings.hpp"
 #include "../Headers/DefaultFiles.hpp"
-#include "../Headers/Menu.hpp"
 #include "../Headers/ConfigHelper.hpp"
 
 #include <SFML/Window/Event.hpp>
@@ -56,9 +55,15 @@ void Application::run()
 	auto timeSinceLastEventUpdate = sf::Time::Zero;
 	auto timeSinceLastHooksUpdate = sf::Time::Zero;
 
+    // Clamp accumulated time so that a long stall (system sleep/wake, breakpoint
+    // pause) cannot force a burst of catch-up updates that starves render().
+    const sf::Time MaxFrameTime = sf::seconds(0.1f);
+
     while (mWindow.isOpen())
     {
         auto dt = clock.restart();
+        if (dt > MaxFrameTime)
+            dt = MaxFrameTime;
 		timeSinceLastEventUpdate += dt;
 		timeSinceLastHooksUpdate += dt;
 
@@ -121,7 +126,7 @@ void Application::processInput(UpdateType type)
 
 	if (type & UpdateType::Event)
 	{
-		if (!Settings::WindowTitleBar)
+		if (!Settings::WindowTitleBar && !isSecondaryUiActive())
 			moveWindow();
 
 		// Make separate windows handle own events
@@ -153,6 +158,20 @@ void Application::handleEvent()
                     mGfxButtonSelector->openWindow();
                 }
             }
+            else if (button == sf::Mouse::Left)
+            {
+                if (!Settings::WindowTitleBar && !isSecondaryUiActive() && mWindow.hasFocus())
+                {
+                    mDraggingWindow = true;
+                    mDragGrabOffset = sf::Mouse::getPosition() - mWindow.getPosition();
+                }
+            }
+        }
+
+        if (event.type == sf::Event::MouseButtonReleased)
+        {
+            if (event.mouseButton.button == sf::Mouse::Left)
+                mDraggingWindow = false;
         }
 
         if (event.type == sf::Event::KeyPressed)
@@ -204,17 +223,17 @@ void Application::handleEvent()
                 if (key.code == Settings::KeyToOpenMenuWindow)
                 {
                     if (mMenu.isOpen())
-                        mMenu.closeWindow();
+                        returnToOverlayMode();
                     else
-                        mMenu.openWindow();
+                        openMenuMode();
                 }
 
                 if (key.code == Settings::KeyToOpenStyleWizard)
                 {
                     if (mStyleWizard->isWindowOpen())
-                        mStyleWizard->closeWindow();
+                        returnToOverlayMode();
                     else
-                        mStyleWizard->openWindow(sf::Vector2i(mWindow.getPosition().x + 100, mWindow.getPosition().y + 100));
+                        openStyleMode();
                 }
 
                 // if (key == Settings::KeyToOpenGraphWindow)
@@ -302,8 +321,10 @@ void Application::render()
         mGfxButtonSelector->render();
     if (mKPSWindow->isOpen())
         mKPSWindow->render();
-    if (mGraph->isOpen())
-        mGraph->render();
+    // Graph feature is disabled (see update()/handleEvent()); keep render off
+    // to avoid drawing stale data if the window is ever opened.
+    // if (mGraph->isOpen())
+    //     mGraph->render();
     if (mStyleWizard->isWindowOpen())
         mStyleWizard->render();
 
@@ -507,12 +528,20 @@ bool Application::isMouseInRange(unsigned idx) const
 
 void Application::addButton(LogKey &logKey)
 {
-    mButtons.emplace_back(std::make_unique<Button>(logKey, mTextures, mFonts));
+    const auto idx = static_cast<unsigned>(mButtons.size());
+    mButtons.emplace_back(std::make_unique<Button>(idx, logKey, mTextures, mFonts));
+    Button::setCount(static_cast<unsigned>(mButtons.size()));
 }
 
 void Application::removeButton()
 {
+    if (mButtons.empty())
+        return;
+
+    const auto idx = static_cast<unsigned>(mButtons.size() - 1);
+    Settings::KeysTotal[idx] = 0;
     mButtons.pop_back();
+    Button::setCount(static_cast<unsigned>(mButtons.size()));
 }
 
 void Application::openWindow()
@@ -561,13 +590,57 @@ void Application::resizeWindow()
 
 void Application::moveWindow()
 {
-    static auto mLastMousePosition = sf::Vector2i();
-    if (mWindow.hasFocus() && sf::Mouse::isButtonPressed(sf::Mouse::Left))
+    // Absolute, offset-based dragging: while a drag is active, keep the window
+    // pinned under the exact point the user grabbed. This avoids the drift and
+    // lurching of delta-accumulation across variable event cadence.
+    if (mDraggingWindow && sf::Mouse::isButtonPressed(sf::Mouse::Left))
     {
-        mWindow.setPosition(mWindow.getPosition() +
-            sf::Mouse::getPosition() - mLastMousePosition);
+        if (mWindow.hasFocus())
+            mWindow.setPosition(sf::Mouse::getPosition() - mDragGrabOffset);
     }
-    mLastMousePosition = sf::Mouse::getPosition();
+    else
+    {
+        mDraggingWindow = false;
+    }
+}
+
+void Application::openMenuMode()
+{
+    if (mStyleWizard->isWindowOpen())
+        mStyleWizard->closeWindow();
+
+    if (!mMenu.isOpen())
+        mMenu.openWindow();
+
+    mUiMode = UiMode::MenuEditing;
+}
+
+void Application::openStyleMode()
+{
+    if (mMenu.isOpen())
+        mMenu.closeWindow();
+
+    if (!mStyleWizard->isWindowOpen())
+        mStyleWizard->openWindow(sf::Vector2i(mWindow.getPosition().x + 100, mWindow.getPosition().y + 100));
+
+    mUiMode = UiMode::StyleEditing;
+}
+
+void Application::returnToOverlayMode()
+{
+    if (mMenu.isOpen())
+        mMenu.closeWindow();
+    if (mStyleWizard->isWindowOpen())
+        mStyleWizard->closeWindow();
+
+    mUiMode = UiMode::OverlayOnly;
+}
+
+bool Application::isSecondaryUiActive() const
+{
+    return mMenu.isOpen()
+        || mStyleWizard->isWindowOpen()
+        || mGfxButtonSelector->isOpen();
 }
 
 unsigned Application::getWindowWidth()
@@ -578,7 +651,9 @@ unsigned Application::getWindowWidth()
         + static_cast<float>(static_cast<int>(btnAmt) - 1) * Settings::GfxButtonDistance
         + static_cast<float>(Settings::WindowBonusSizeLeft + Settings::WindowBonusSizeRight);
 
-    return std::max(5u, static_cast<unsigned>(totalWidth));
+    // Clamp in the float domain: a negative total (possible with negative
+    // button distance / texture size) would wrap when cast to unsigned.
+    return static_cast<unsigned>(std::max(5.f, totalWidth));
 }
 
 unsigned Application::getWindowHeight()
@@ -587,7 +662,7 @@ unsigned Application::getWindowHeight()
         static_cast<float>(Settings::GfxButtonTextureSize.y)
         + static_cast<float>(Settings::WindowBonusSizeTop + Settings::WindowBonusSizeBottom);
 
-    return std::max(5u, static_cast<unsigned>(totalHeight));
+    return static_cast<unsigned>(std::max(5.f, totalHeight));
 }
 
 sf::IntRect Application::getWindowRect()

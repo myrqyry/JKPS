@@ -48,6 +48,20 @@ class Application
 		void update(float deltaSeconds, UpdateType type);
 		void render();
 
+        // UI mode policy: Menu and StyleWizard are mutually exclusive editing
+        // surfaces; the overlay is otherwise in play/monitoring mode.
+        enum class UiMode
+        {
+            OverlayOnly,
+            MenuEditing,
+            StyleEditing
+        };
+
+        void openMenuMode();
+        void openStyleMode();
+        void returnToOverlayMode();
+        bool isSecondaryUiActive() const;
+
         void unloadChangesQueue();
         void resetAssets();
 
@@ -91,4 +105,9 @@ class Application
         std::unique_ptr<KPSWindow> mKPSWindow;
         std::unique_ptr<KeysPerSecondGraph> mGraph;
         std::unique_ptr<StyleWizard> mStyleWizard;
+
+        UiMode mUiMode { UiMode::OverlayOnly };
+
+        bool mDraggingWindow { false };
+        sf::Vector2i mDragGrabOffset;
 };

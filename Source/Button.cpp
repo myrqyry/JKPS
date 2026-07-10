@@ -6,15 +6,16 @@
 
 unsigned Button::mSize(0u);
 
-Button::Button(LogKey &key, const TextureHolder &textureHolder, const FontHolder &fontHolder)
-: LogButton(mSize, key)
-, GfxButton(mSize, textureHolder, fontHolder)
+Button::Button(unsigned idx, LogKey &key, const TextureHolder &textureHolder, const FontHolder &fontHolder)
+: LogButton(idx, key)
+, GfxButton(idx, textureHolder, fontHolder)
 , mTextures(textureHolder)
 , mFonts(fontHolder)
-, mBtnIdx(mSize)
+, mBtnIdx(idx)
+, mTextLayoutDirty(true)
+, mCachedCharSize(0u)
 {
     LogButton::mTotal = Settings::KeysTotal[mBtnIdx];
-    ++mSize;
 }
 
 void Button::update(float deltaSeconds)
@@ -55,36 +56,43 @@ void Button::setTextStrings()
     const auto lAlt = Settings::ShowOppOnAlt && sf::Keyboard::isKeyPressed(sf::Keyboard::LAlt);
     const auto sepValAdvMode = isInSupportedRange && Settings::ButtonTextSepPosAdvancedMode;
 
+    // Only recompute layout when a displayed string or the character size
+    // actually changes; otherwise the bounds/origin pass is redundant.
+    if (chSz != mCachedCharSize)
+        mTextLayoutDirty = true;
+
+    auto assign = [this](TextID id, const std::string &str)
+    {
+        if (mTexts[id]->getString().toAnsiString() != str)
+        {
+            mTexts[id]->setString(str);
+            mTextLayoutDirty = true;
+        }
+    };
+
     if (Settings::ButtonTextShowVisualKeys) 
     {
         if ((!lAlt) || (lAlt && sepValAdvMode && Settings::ButtonTextShowTotal))
-            mTexts[VisualKey]->setString(LogButton::mKey.visualStr);
+            assign(VisualKey, LogButton::mKey.visualStr);
         else
-            mTexts[VisualKey]->setString(std::to_string(LogButton::mTotal));
+            assign(VisualKey, std::to_string(LogButton::mTotal));
     }
     if (Settings::ButtonTextShowTotal)
     {
         if ((!lAlt) || (lAlt && sepValAdvMode && Settings::ButtonTextShowVisualKeys))
-            mTexts[KeyCounter]->setString(std::to_string(LogButton::mTotal));
+            assign(KeyCounter, std::to_string(LogButton::mTotal));
         else
-            mTexts[KeyCounter]->setString(LogButton::mKey.visualStr);
+            assign(KeyCounter, LogButton::mKey.visualStr);
     }
     if (Settings::ButtonTextShowKPS)
     {
         // static_cast is required since KPS w/floating point is not still done
-        mTexts[KeyPerSecond]->setString(std::to_string(static_cast<unsigned>(mKeysPerSecond)));
+        assign(KeyPerSecond, std::to_string(static_cast<unsigned>(mKeysPerSecond)));
     }
     if (Settings::ButtonTextShowBPM)
     {
-        mTexts[BeatsPerMinute]->setString(std::to_string(static_cast<unsigned>(LogButton::getLocalBeatsPerMinute())));
+        assign(BeatsPerMinute, std::to_string(static_cast<unsigned>(LogButton::getLocalBeatsPerMinute())));
     }
-
-    for (auto &text : mTexts)
-    {
-        text->setCharacterSize(chSz);
-        GfxButton::keepInBounds(*text);
-    }
-    GfxButton::centerOrigins();
 }
 
 void Button::controlBounds()
@@ -93,14 +101,21 @@ void Button::controlBounds()
     const auto advMode = isInSupportedRange && Settings::ButtonTextAdvancedMode;
     const auto chSz = !advMode ? Settings::ButtonTextCharacterSize : Settings::ButtonTextAdvCharacterSize[mBtnIdx];
 
+    if (LogButton::mKey.resetChangedState())
+        mTextLayoutDirty = true;
+
+    if (!mTextLayoutDirty)
+        return;
+
     for (auto &text : mTexts)
     {
-        if (LogButton::mKey.resetChangedState())
-            text->setCharacterSize(chSz);
-
+        text->setCharacterSize(chSz);
         GfxButton::keepInBounds(*text);
     }
     GfxButton::centerOrigins();
+
+    mCachedCharSize = chSz;
+    mTextLayoutDirty = false;
 }
 
 LogKey *Button::getLogKey()
@@ -110,8 +125,6 @@ LogKey *Button::getLogKey()
 
 Button::~Button()
 {
-    Settings::KeysTotal[mBtnIdx] = 0;
-    --mSize;
 }
 
 unsigned Button::getIdx() const
@@ -122,6 +135,11 @@ unsigned Button::getIdx() const
 unsigned Button::size()
 {
     return mSize;
+}
+
+void Button::setCount(unsigned count)
+{
+    mSize = count;
 }
 
 bool Button::parameterIdMatches(LogicalParameter::ID id)

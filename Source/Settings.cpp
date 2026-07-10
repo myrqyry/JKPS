@@ -198,4 +198,15 @@ float MaxKPS;
 unsigned Total;
 Container<unsigned> KeysTotal;
 
+// [UI design tokens]
+namespace UiTokens
+{
+float BaseSpacing = 8.f;
+unsigned PrimaryTextSize = 18u;
+unsigned SecondaryTextSize = 14u;
+sf::Color SurfaceColor = sf::Color(30, 30, 30);
+sf::Color AccentColor = sf::Color(0, 180, 255);
+sf::Color BorderColor = sf::Color(60, 60, 60);
+}
+
 } // !namespace Settings
