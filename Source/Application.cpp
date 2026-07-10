@@ -236,13 +236,13 @@ void Application::handleEvent()
                         openStyleMode();
                 }
 
-                // if (key == Settings::KeyToOpenGraphWindow)
-                // {
-                //     if (mGraph->isOpen())
-                //         mGraph->closeWindow();
-                //     else
-                //         mGraph->openWindow();
-                // }
+                if (key.code == Settings::KeyToOpenGraphWindow)
+                {
+                    if (mGraph->isOpen())
+                        mGraph->closeWindow();
+                    else
+                        mGraph->openWindow();
+                }
 
                 if (key.code == Settings::KeyToReset)
                 {
@@ -292,8 +292,8 @@ void Application::update(float deltaSeconds, UpdateType type)
 		if (mStyleWizard->isWindowOpen())
 			mStyleWizard->processInput();
 
-		// if (mGraph->isOpen())
-		//     mGraph->update();
+		if (mGraph->isOpen())
+		    mGraph->update();
 	}
 
 	if (type & UpdateType::Hooks)
@@ -321,10 +321,8 @@ void Application::render()
         mGfxButtonSelector->render();
     if (mKPSWindow->isOpen())
         mKPSWindow->render();
-    // Graph feature is disabled (see update()/handleEvent()); keep render off
-    // to avoid drawing stale data if the window is ever opened.
-    // if (mGraph->isOpen())
-    //     mGraph->render();
+    if (mGraph->isOpen())
+        mGraph->render();
     if (mStyleWizard->isWindowOpen())
         mStyleWizard->render();
 

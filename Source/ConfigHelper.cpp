@@ -11,6 +11,8 @@
 #include <array>
 #include <algorithm>
 #include <cctype>
+#include <charconv>
+#include <cmath>
 #include <filesystem>
 
 
@@ -278,32 +280,6 @@ bool isToCheck(LogicalParameter::Type type)
     return std::find(typesToCheck.begin(), typesToCheck.end(), type) != typesToCheck.end();
 }
 
-bool isNumber(std::string_view valStr)
-{
-    const auto len = valStr.length();
-    if (len == 0ul)
-        return false;
-
-    const auto ch = valStr.front();
-
-    if (std::isdigit(ch))
-    {
-        return true;
-    }
-    else if (ch == '-' || ch == '+')
-    {
-        if (len <= 1ul)
-        {
-            return false;
-        }
-        else
-        {
-            return std::isdigit(valStr.at(1ul));
-        }
-    }
-    return false;
-}
-
 bool canBeNull(std::string_view str)
 {
     std::array strs {
@@ -315,6 +291,28 @@ bool canBeNull(std::string_view str)
     };
 
     return std::find(strs.begin(), strs.end(), str) != strs.end();
+}
+
+// Exception-free, allocation-free numeric scan over a string_view.
+// Returns the first floating-point token starting at `first` (skipping leading
+// whitespace) and sets `next` to the position just past it. Returns NaN and
+// leaves `next == first` on failure (no digits found).
+float parseFloatFromView(std::string_view str, std::size_t &next)
+{
+    auto first = str.data();
+    auto last = str.data() + str.size();
+    while (first != last && std::isspace(static_cast<unsigned char>(*first)))
+        ++first;
+
+    float value = 0.f;
+    const auto res = std::from_chars(first, last, value);
+    if (res.ec != std::errc() || res.ptr == first)
+    {
+        next = str.size();
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    next = static_cast<std::size_t>(res.ptr - str.data());
+    return value;
 }
 
 void readParameter(LogicalParameter &par, std::string collection)
@@ -392,64 +390,67 @@ void readParameter(LogicalParameter &par, std::string collection)
 
 float readDigitParameter(const LogicalParameter &par, std::string &valStr)
 {
-    auto handleError = [&] (bool useDefault)
-        {
-			const std::string errStr = getOutOfBoundsErrMsg(par);
-			if (ofErrLog.is_open())
-			{
-				ofErrLog << errStr;
-			}
-			std::cout << errStr;
-			valStr = useDefault ? par.getDefValStr() : std::to_string(static_cast<int>(par.mLowLimits));
-            return readDigitParameter(par, valStr);
-        };
-
     const auto lowLim = par.mLowLimits, highLim = par.mHighLimits;
 
-    if (!isNumber(valStr))
-        handleError(true);
-
-    const auto val = std::stof(valStr);
+    std::size_t next = 0ul;
+    const auto val = parseFloatFromView(valStr, next);
+    if (std::isnan(val))
+    {
+        if (ofErrLog.is_open())
+            ofErrLog << getReadingErrMsg(par, "[Digit]");
+        valStr = par.getDefValStr();
+        return parseFloatFromView(valStr, next);
+    }
 
     if (lowLim > val || val > highLim)
-        return handleError(false);
+    {
+        if (ofErrLog.is_open())
+            ofErrLog << getOutOfBoundsErrMsg(par);
+        valStr = par.getDefValStr();
+        return parseFloatFromView(valStr, next);
+    }
 
     return val;
 }
 
 sf::Vector2f readVectorParameter(const LogicalParameter &par, const std::string &valStr)
 {
-    auto handleError = [&] ()
-        {
-            ofErrLog << getOutOfBoundsErrMsg(par);
-            return readVectorParameter(par, par.getDefValStr());
-        };
-
     const auto size = 2ul;
     float vec[size];
     const auto lowLim = par.mLowLimits, highLim = par.mHighLimits;
 
+    // Read both components. On any parse/bounds failure, fall back to the
+    // default string exactly once (non-recursive: compute the default inline
+    // rather than re-invoking this function, which would recurse).
     for (auto i = 0ul, strIdx = 0ul; i < size; ++i)
     {
-        const auto &substr = valStr.substr(strIdx, 81ul);
-        if (!isNumber(substr))
-            return handleError();
+        const auto comma = valStr.find(',', strIdx);
+        const auto &substr = valStr.substr(strIdx, comma == std::string::npos ? 81ul : comma - strIdx);
 
-        const auto val = std::stof(substr);
+        std::size_t next = 0ul;
+        const auto val = parseFloatFromView(substr, next);
+        if (std::isnan(val) || val < lowLim || val > highLim)
+        {
+            if (ofErrLog.is_open())
+                ofErrLog << getOutOfBoundsErrMsg(par);
+            const auto def = parseFloatFromView(par.getDefValStr(), next);
+            return sf::Vector2f(def, def);
+        }
+
         vec[i] = val;
 
         if (i < size - 1ul)
         {
-            const auto found = substr.find(',');
-            if (found == std::string::npos)
-                return handleError();
+            if (comma == std::string::npos)
+            {
+                if (ofErrLog.is_open())
+                    ofErrLog << getOutOfBoundsErrMsg(par);
+                const auto def = parseFloatFromView(par.getDefValStr(), next);
+                return sf::Vector2f(def, def);
+            }
 
-            strIdx += found + 1ul;
+            strIdx = comma + 1ul;
         }
-
-        if (val < lowLim || val > highLim)
-            return handleError();
-
     }
 
     return sf::Vector2f(vec[0], vec[1]);
@@ -457,10 +458,16 @@ sf::Vector2f readVectorParameter(const LogicalParameter &par, const std::string 
 
 sf::Color readColorParameter(const LogicalParameter &par, const std::string &valStr)
 {
-    auto handleError = [&] ()
+    auto fail = [&] ()
         {
-            ofErrLog << getOutOfBoundsErrMsg(par);
-            return readColorParameter(par, par.getDefValStr());
+            if (ofErrLog.is_open())
+                ofErrLog << getOutOfBoundsErrMsg(par);
+            // Single, non-recursive fallback: parse the default string's first
+            // channel; if even that fails, use a safe opaque gray.
+            std::size_t next = 0ul;
+            const auto def = parseFloatFromView(par.getDefValStr(), next);
+            const auto v = std::isnan(def) ? sf::Uint8(128) : static_cast<sf::Uint8>(def);
+            return sf::Color(v, v, v, 255);
         };
 
     const auto size = 4ul;
@@ -469,42 +476,41 @@ sf::Color readColorParameter(const LogicalParameter &par, const std::string &val
 
     for (auto i = 0ul, strIdx = 0ul; i < size; ++i)
     {
-        const auto &substr = valStr.substr(strIdx, 81ul);
+        const auto comma = valStr.find(',', strIdx);
+        const auto &substr = valStr.substr(strIdx, comma == std::string::npos ? 81ul : comma - strIdx);
 
-        if (i <= size - 1ul)
+        if (i == size - 1ul && comma == std::string::npos)
         {
-            const auto found = substr.find(',');
-            if (found == std::string::npos && i == size - 1ul)
+            // Alpha channel may be not written
+            if (substr.empty())
             {
-                // Alpha channel may be not written
-                if (substr.empty())
-                {
-                    rgba[i] = sf::Uint8(255);
-                    continue;
-                }
-
-                if (!isNumber(substr))
-                    return handleError();
-
-                const auto val = std::stof(substr);
-                rgba[i] = static_cast<sf::Uint8>(val);
-
+                rgba[i] = sf::Uint8(255);
                 continue;
             }
-            if (found == std::string::npos && ofErrLog.is_open())
-                return handleError();
 
-            strIdx += found + 1ul;
+            std::size_t next = 0ul;
+            const auto val = parseFloatFromView(substr, next);
+            if (std::isnan(val))
+                return fail();
+
+            rgba[i] = static_cast<sf::Uint8>(val);
+            continue;
         }
 
-        if (!isNumber(substr))
-            return handleError();
+        if (comma == std::string::npos)
+            return fail();
 
-        const auto val = std::stof(substr);
+        std::size_t next = 0ul;
+        const auto val = parseFloatFromView(substr, next);
+        if (std::isnan(val))
+            return fail();
+
         rgba[i] = static_cast<sf::Uint8>(val);
 
-        if ((val < lowLim || val > highLim) && ofErrLog.is_open())
-            return handleError();
+        if (val < lowLim || val > highLim)
+            return fail();
+
+        strIdx = comma + 1ul;
     }
 
     return sf::Color(rgba[0], rgba[1], rgba[2], rgba[3]);
@@ -567,8 +573,8 @@ std::queue<LogKey> readKeys(const std::string &keysStr, const std::string &visua
         std::string keyStr(keysStr, strIdx1, keysStr.substr(strIdx1).find(ConfigHelper::separationSign));
         std::string visualKeyStr(visualKeysStr, strIdx2, visualKeysStr.substr(strIdx2).find(ConfigHelper::separationSign));
         std::string checkStr;
-        sf::Keyboard::Key key;
-        sf::Mouse::Button button;
+        sf::Keyboard::Key key = sf::Keyboard::Unknown;
+        sf::Mouse::Button button = sf::Mouse::Left;
 
         const bool isKeyB = isKey(keyStr);
         const bool isButtonB = isButton(keyStr);

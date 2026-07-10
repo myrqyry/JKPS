@@ -4,29 +4,22 @@
 
 #include <SFML/Window/Event.hpp>
 
-#include <iostream>
-#include <cstdlib>
-#include <ctime>
+#include <algorithm>
+#include <cmath>
 
 
 KeysPerSecondGraph::KeysPerSecondGraph()
-: mVertecies(sf::TriangleFan, 16)
-, mActiveVertecies(16)
+: mLine(sf::LineStrip, 0)
 {
-    std::srand(static_cast<unsigned>(std::time(nullptr)));
+    mSamples.fill(0.f);
+}
 
-    const float widthStep = 800.f / 13.f;
-    float width = 0;
-    float height = 600;
-    for (unsigned i = 0; i < 14; ++i)
-    {
-        sf::Vertex &vertex = mVertecies[i];
-        vertex.position.x = width;
-        vertex.position.y = height - static_cast<float>(i * 20);
-        width += widthStep;
-    }
-    mVertecies[14].position = sf::Vector2f(800, 600);
-    mVertecies[15].position = sf::Vector2f(0, 600);
+void KeysPerSecondGraph::pushSample(float kps)
+{
+    mSamples[mHead] = kps;
+    mHead = (mHead + 1u) % BufferCapacity;
+    if (mCount < BufferCapacity)
+        ++mCount;
 }
 
 void KeysPerSecondGraph::handleOwnEvent()
@@ -50,14 +43,45 @@ void KeysPerSecondGraph::handleOwnEvent()
 
 void KeysPerSecondGraph::update()
 {
+    if (!mWindow.isOpen())
+        return;
 
+    // Sample the live aggregate KPS each update tick. Because the buffer is a
+    // fixed ring, no allocation occurs and stale frames are never drawn.
+    pushSample(Button::getKeysPerSecond());
 }
 
 void KeysPerSecondGraph::render()
 {
-    mWindow.clear(sf::Color(30, 30, 30));
+    mWindow.clear(Settings::UiTokens::SurfaceColor);
 
-    mWindow.draw(mVertecies);
+    if (mCount > 0u)
+    {
+        const float viewWidth = 800.f;
+        const float viewHeight = 600.f;
+        const float padBottom = 20.f;
+        const float padTop = 20.f;
+        const float plotHeight = viewHeight - padBottom - padTop;
+
+        // Auto-scale vertically to the busiest observed sample.
+        float maxKps = 1.f;
+        for (std::size_t i = 0u; i < mCount; ++i)
+            maxKps = std::max(maxKps, mSamples[i]);
+
+        mLine.resize(mCount);
+        const float stepX = viewWidth / static_cast<float>(BufferCapacity - 1u);
+        // Walk oldest -> newest so the line reads left-to-right over time.
+        for (std::size_t i = 0u; i < mCount; ++i)
+        {
+            const std::size_t idx = (mHead + BufferCapacity - mCount + i) % BufferCapacity;
+            const float x = static_cast<float>(i) * stepX;
+            const float y = viewHeight - padBottom
+                - (mSamples[idx] / maxKps) * plotHeight;
+            mLine[i].position = sf::Vector2f(x, y);
+            mLine[i].color = Settings::UiTokens::AccentColor;
+        }
+        mWindow.draw(mLine);
+    }
 
     mWindow.display();
 }
@@ -85,7 +109,6 @@ bool KeysPerSecondGraph::isOpen() const
 
 void KeysPerSecondGraph::updateParameters()
 {
-    // mActiveVertecies =
 }
 
 bool KeysPerSecondGraph::parameterIdMatches(LogicalParameter::ID /* id */)

@@ -406,17 +406,16 @@ GfxButton::RectEmitter::RectEmitter(unsigned btnIdx)
 // , mBottomVertecies(sf::Quads, 1000u)
 {
     const auto count = mMiddleVertecies.getVertexCount() / 4;
+    mActive.assign(count, false);
     for (auto i = 0ul; i < count; ++i)
         mAvailableRectIndices.emplace_back(i);
 }
 
 void GfxButton::RectEmitter::update(float deltaSeconds, bool keyState, bool prevKeyState)
 {
-    // Don't update anything if there is no active rectangles
+    // Don't update anything if there are no active rectangles
     if (mUsedRectIndices.empty())
         return;
-
-    std::vector<size_t> toRemove;
 
     const auto isInSupportedRange = mBtnIdx < Settings::SupportedAdvancedKeysNumber;
     const auto advMode = isInSupportedRange && Settings::KeyPressVisAdvSettingsMode;
@@ -428,9 +427,12 @@ void GfxButton::RectEmitter::update(float deltaSeconds, bool keyState, bool prev
     const auto minHeight = !advMode ? Settings::KeyPressFixedHeight :
         Settings::KeyPressAdvFixedHeight[mBtnIdx];
 
-    // Iterate through all rectangles
-    for (auto i : mUsedRectIndices)
+    // Iterate through all rectangles. Inactive slots are skipped (flag array),
+    // so no work is done for dead particles.
+    for (auto it = mUsedRectIndices.begin(); it != mUsedRectIndices.end(); )
     {
+        const auto i = *it;
+
         // Flag which identifies if all the rectangle vertices are on the same height
         auto eachVertexIsOnLimit = true;
 
@@ -439,52 +441,35 @@ void GfxButton::RectEmitter::update(float deltaSeconds, bool keyState, bool prev
         for (auto j = vertexIndex; j < vertexIndex + 4ul; ++j)
         {
             // Take vertex reference
-            // auto &topSideVertex = mTopVertecies[j];
             auto &middleVertex = mMiddleVertecies[j];
-            // auto &bottomSideVertex = mBottomVertecies[j];
 
             // Limit the square to go beyond the line length
             auto move = [len, speed, deltaSeconds] (sf::Vertex &vertex)
                 {
                     vertex.position.y = -std::min(std::abs(vertex.position.y + speed * deltaSeconds * getConstantSpeedScale()), len);
                 };
-            // move(topSideVertex);
             move(middleVertex);
-            // move(bottomSideVertex);
 
-            // Check if the current vertex is on the max height, do so only if previous were so
-            // if (eachVertexIsOnLimit)
-            // {
-            //     eachVertexIsOnLimit = std::abs(bottomSideVertex.position.y) 
-            //         == len;
-            // }
             if (eachVertexIsOnLimit)
             {
                 eachVertexIsOnLimit = std::abs(middleVertex.position.y) == len;
             }
 
-            // Set the right alpha channel depending on the progress to the end of the fade out length line
-            // topSideVertex.color = getVertexColor(mTopVertecies, j);
             middleVertex.color = getVertexColor(mMiddleVertecies, j);
-            // bottomSideVertex.color = getVertexColor(mBottomVertecies, j);
         }
 
-        // All vertices are on the same height
+        // All vertices are on the same height -> retire this rectangle
         if (eachVertexIsOnLimit)
         {
-            // Add the rectangle index to available index list, add to list of rectangles to remove
+            mActive[i] = false;
             mAvailableRectIndices.emplace_back(i);
-            toRemove.emplace_back(i);
+            // Swap-and-pop: O(1) removal, no reallocation, keeps cache order.
+            *it = mUsedRectIndices.back();
+            mUsedRectIndices.pop_back();
+            continue;
         }
-    }
 
-    // Iterate through all the indices of the rectangles to remove
-    for (auto i : toRemove)
-    {
-        // Remove every index that is equal to i
-        mUsedRectIndices.erase(std::remove(
-                mUsedRectIndices.begin(), mUsedRectIndices.end(), i), 
-            mUsedRectIndices.end());
+        ++it;
     }
 
     // If a button is pressed don't let the spawning rectangle go away from the spawn point
@@ -628,10 +613,11 @@ void GfxButton::RectEmitter::create(float deltaSeconds, sf::Vector2f buttonSize)
     // pushVertecies(mBottomVertecies, bottomVertices, firstVertexIndex, buttonSize);
 
     
-    // Remove the used index from the available rect indices list 
+    // Remove the used index from the available rect indices list
     // and push it to the used one
     mAvailableRectIndices.pop_back();
     mUsedRectIndices.emplace_back(rectIndex);
+    mActive[rectIndex] = true;
 }
 
 void GfxButton::RectEmitter::scaleTexture(sf::Vector2f /*buttonSize*/)

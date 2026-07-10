@@ -215,6 +215,10 @@ class GfxButton : public sf::Drawable, public sf::Transformable
                 sf::VertexArray mTopVertecies;
                 sf::VertexArray mBottomVertecies;
                 std::vector<size_t> mAvailableRectIndices;
+                // Cache-friendly active-set: a flat flag per pool slot instead of a
+                // growing/shrinking index vector. Iteration stays uniform and no
+                // per-frame allocation occurs while particles live and die.
+                std::vector<bool> mActive;
                 std::vector<size_t> mUsedRectIndices;
                 std::vector<sf::Text> mTexts;
                 sf::Vector2f mEmitterPosition;

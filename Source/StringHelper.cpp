@@ -4,7 +4,7 @@
 #include <cassert>
 
 
-unsigned readAmountOfParms(const std::string &str)
+unsigned readAmountOfParms(std::string_view str)
 {
     unsigned amt = 0;
     for (unsigned idx = 0; idx < str.size(); ++idx)
@@ -16,7 +16,7 @@ unsigned readAmountOfParms(const std::string &str)
     return amt;
 }
 
-std::string readValue(const std::string &str, unsigned n)
+std::string readValue(std::string_view str, unsigned n)
 {
     unsigned idx, nVal = 0;
     // Skip all previous values
@@ -66,11 +66,11 @@ void rmChOnIdx(std::string &str, unsigned idx)
     modifyNumOnIdx(str, idx, false);
 }
 
-std::string eraseDigitsOverHundredths(const std::string &floatStr)
+std::string eraseDigitsOverHundredths(std::string_view floatStr)
 {
     std::size_t pointIdx;
     const bool isFloat = (pointIdx = floatStr.find('.')) != std::string::npos;
-    return isFloat ? floatStr.substr(0, pointIdx + 2) : floatStr;
+    return std::string(isFloat ? floatStr.substr(0, pointIdx + 2) : floatStr);
 }
 
 
@@ -191,7 +191,7 @@ std::string keyToStr(sf::Keyboard::Key key, bool saveToCfg)
     }
 }
 
-sf::Keyboard::Key strToKey(const std::string &str)
+sf::Keyboard::Key strToKey(std::string_view str)
 {
     if (str == "A")
         return sf::Keyboard::Key::A;
@@ -412,7 +412,7 @@ std::string btnToStr(sf::Mouse::Button button)
     }
 }
 
-sf::Mouse::Button strToBtn(const std::string &str)
+sf::Mouse::Button strToBtn(std::string_view str)
 {
     if (str == "M Left")
         return sf::Mouse::Left;
@@ -428,13 +428,13 @@ sf::Mouse::Button strToBtn(const std::string &str)
     return sf::Mouse::Left;
 }
 
-bool isKey(const std::string &str)
+bool isKey(std::string_view str)
 {
     sf::Keyboard::Key key = strToKey(str);
     return key != sf::Keyboard::Unknown;
 }
 
-bool isButton(const std::string &str)
+bool isButton(std::string_view str)
 {
     sf::Mouse::Button btn = strToBtn(str);
     // strToBtn returns sf::Mouse::Left if it couldn't find right value

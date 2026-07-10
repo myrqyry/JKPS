@@ -5,6 +5,7 @@
 > **Audience:** New contributors, architects, and maintainers. Reading paths are suggested at the end.
 >
 > **Last aligned with:** source tree at `/home/myrqyry/MQR/JKPS` (main), 14.3K LOC, ~55 translation units.
+> **Language standard:** C++20 (`CMAKE_CXX_STANDARD 20`, extensions off).
 
 ---
 
@@ -435,7 +436,7 @@ Dragging is **suppressed while any secondary UI is active** (`!isSecondaryUiActi
 
 ### 10.4 Design tokens (`Settings::UiTokens`) — bridge, not replace
 *Why:* The review called the `Settings` namespace a "god object." Rather than a risky mass extraction, we introduced a `UiTokens` namespace (spacing, text sizes, surface/accent/border colors) as the canonical vocabulary new layout code should prefer, while keeping the ~200 fine-grained `Settings` fields for backward compatibility and per-element overrides.
-*Trade-off:* Two vocabulary layers coexist; this is intentional incremental migration, not a rewrite.
+*Trade-off:* Two vocabulary layers coexist; this is intentional incremental migration, not a rewrite. The tokens are now consumed by the re-enabled `KeysPerSecondGraph` (surface background + accent line color), demonstrating the bridge pattern without altering existing button/statistics visuals.
 
 ### 10.5 Multiple inheritance for `Button`
 *Why:* `LogButton` (logic) and `GfxButton` (visual) are independently useful concepts; `Button` fuses them so each tracked key is one object with both behaviors and a single position.
@@ -481,6 +482,20 @@ Added `namespace Settings::UiTokens` with `BaseSpacing`, `PrimaryTextSize`, `Sec
 - `CMakeLists.txt`: `CONFIGURE_DEPENDS` added to both `GLOB_RECURSE` source globs (new files are auto-detected on rebuild).
 - Removed a duplicate `#include "../Headers/Menu.hpp"` in `Application.cpp`.
 - `KeysPerSecondGraph` render call commented out (it was already not updating) to avoid stale rendering.
+
+### 11.8 Roadmap improvements (post-architecture pass)
+
+Implemented from the community refactor roadmap, with two items deliberately **deferred/rejected** (see below).
+
+- **1.2 Robust config parsing (`std::from_chars`).** `ConfigHelper`'s `readDigitParameter` / `readVectorParameter` / `readColorParameter` no longer use `std::stof` + a manual `isNumber` check. A new `parseFloatFromView(std::string_view, size_t&)` helper scans a float via `std::from_chars` (exception-free, allocation-free) and returns NaN on no-digit. All three readers fall back to the default value **non-recursively** (the previous `handleError` re-invoked the reader, which could infinite-recurse and overflow the stack). `isNumber` was removed as dead code.
+- **2.2 `RectEmitter` cache-friendly refresh.** Replaced the growing `mUsedRectIndices` vector (erased/rebuilt each frame) with a uniform `std::vector<bool> mActive` flag array plus swap-and-pop removal. Inactive particles are skipped; no per-frame allocation occurs while particles live and die — better CPU-cache behavior.
+- **3.1 `KeysPerSecondGraph` re-enabled with a ring buffer.** Re-architected from a hardcoded triangle-fan mockup into a fixed-capacity `std::array<float, 256>` ring buffer sampled from `Button::getKeysPerSecond()` each tick and drawn as a scrolling `sf::LineStrip` (auto-scaled to the busiest sample). The open/close hotkey (`KeyToOpenGraphWindow`, default `G`) is re-enabled.
+- **3.2 Incremental `UiTokens` migration.** The graph now renders its background via `Settings::UiTokens::SurfaceColor` and its line via `Settings::UiTokens::AccentColor` (identical to the prior hard-coded values, so zero visual change). Existing button/statistics visuals still read their per-element `Settings` overrides — the "bridge, not replace" approach avoids silently changing users' layouts.
+- **4.2 C++20 + `std::string_view` parsing.** Bumped `CMAKE_CXX_STANDARD` to `20` (extensions off). Read-only `StringHelper` parsers (`readAmountOfParms`, `readValue`, `eraseDigitsOverHundredths`, `strToKey`, `strToBtn`, `isKey`, `isButton`) now take `std::string_view`; `Utility::retrieveNumber` already did. `ConfigHelper` parsing uses `std::string_view` throughout. Also cleared two latent `-Werror` issues (`[[maybe_unused]]` on `ResourceHolder::insertResource`'s `inserted`; initialized `key`/`button` in `readKeys`).
+
+**Deferred / rejected roadmap items (with rationale):**
+- **1.1 Hierarchical context structs** — *deferred.* Collapsing `Settings` into `ButtonTheme`/`StatisticsConfig`/`WindowLayout` would rewire the ~150 `LogicalParameter` bindings for no current payoff and high regression risk. `UiTokens` is the safer incremental bridge.
+- **4.1 Explicit CMake source listing** — *rejected.* It would undo the `CONFIGURE_DEPENDS` auto-discovery we rely on; `CONFIGURE_DEPENDS` is the modern, correct choice for this project.
 
 ---
 

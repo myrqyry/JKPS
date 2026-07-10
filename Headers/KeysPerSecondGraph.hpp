@@ -6,6 +6,7 @@
 #include "LogicalParameter.hpp"
 
 #include <array>
+#include <cstddef>
 
 
 class KeysPerSecondGraph
@@ -26,8 +27,18 @@ class KeysPerSecondGraph
 
 
     private:
+        // Fixed-capacity ring buffer of sampled KPS values. Capacity is constant
+        // so no allocation happens while the graph is live; sampling wraps around
+        // and overwrites the oldest sample.
+        static constexpr std::size_t BufferCapacity = 256u;
+
+        void pushSample(float kps);
+
         sf::RenderWindow mWindow;
 
-        sf::VertexArray mVertecies;
-        unsigned mActiveVertecies;
+        std::array<float, BufferCapacity> mSamples;
+        std::size_t mHead { 0u };
+        std::size_t mCount { 0u };
+
+        sf::VertexArray mLine;
 };
