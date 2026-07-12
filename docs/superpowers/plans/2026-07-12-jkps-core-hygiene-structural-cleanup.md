@@ -48,8 +48,6 @@ This task removes the only verified low-level correctness smell in the parameter
 // Headers/LogicalParameter.hpp
 #include <algorithm>
 
-// ...
-
 private:
     bool mChanged;
 
