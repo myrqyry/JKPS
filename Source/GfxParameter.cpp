@@ -2,6 +2,7 @@
 #include "../Headers/StringHelper.hpp"
 #include "../Headers/ResourceHolder.hpp"
 #include "../Headers/ParameterLine.hpp"
+#include "../Headers/Settings.hpp"
 
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Graphics/RenderStates.hpp>
@@ -9,9 +10,9 @@
 #include <cassert>
 
 
-const sf::Color GfxParameter::defaultRectColor(120, 120, 120);
-const sf::Color GfxParameter::defaultAimedRectColor(160, 160, 160);
-const sf::Color GfxParameter::defaultSelectedRectColor(180, 180, 180);
+const sf::Color GfxParameter::defaultRectColor = Settings::UiTokens::CustomizationSurfaceVariant;
+const sf::Color GfxParameter::defaultAimedRectColor = Settings::UiTokens::CustomizationSurface;
+const sf::Color GfxParameter::defaultSelectedRectColor = Settings::UiTokens::CustomizationAccent;
 const TextureHolder *GfxParameter::mTextures = nullptr;
 const FontHolder *GfxParameter::mFonts = nullptr;
 
@@ -24,9 +25,12 @@ GfxParameter::GfxParameter(const ParameterLine *parent, const std::string &str, 
     mRect.setSize(rectSize);
     mRect.setOrigin(mRect.getSize() / 2.f);
     mRect.setFillColor(defaultRectColor);
+    mRect.setOutlineThickness(1.f);
+    mRect.setOutlineColor(Settings::UiTokens::CustomizationOutline);
 
     mValText.setFont(mFonts->get(Fonts::Value));
     mValText.setString(str);
+    mValText.setFillColor(sf::Color::White);
     setupValPos();
 
     float distance = 80;
@@ -49,10 +53,13 @@ GfxParameter::GfxParameter(const std::string &str, sf::Vector2f rectSize)
     mRect.setSize(rectSize);
     mRect.setOrigin(rectSize / 2.f);
     mRect.setFillColor(defaultRectColor);
+    mRect.setOutlineThickness(1.f);
+    mRect.setOutlineColor(Settings::UiTokens::CustomizationOutline);
 
     mValText.setFont(mFonts->get(Fonts::Value));
     mValText.setString(str);
     mValText.setCharacterSize(15);
+    mValText.setFillColor(sf::Color::White);
 
     auto rect = mValText.getLocalBounds();
     mValText.setOrigin(

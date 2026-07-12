@@ -47,6 +47,8 @@ class Menu
     private:
         void handleEvent();
         void handleRealtimeInput();
+        void drawContentLayer();
+        void drawChromeLayer();
 
         void loadFonts();
         void loadTextures();

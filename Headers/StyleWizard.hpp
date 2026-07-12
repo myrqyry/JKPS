@@ -76,6 +76,8 @@ class StyleWizard
         void handleNumericSlider(int &value, int minVal, int maxVal, sf::Vector2f position);
         void drawShapePreview(int shape, sf::Vector2f position, sf::Vector2f size, sf::Color color);
         void drawAnimStylePreview(int style, sf::Vector2f position, float scale);
+        void drawBackdrop();
+        void drawFooterRail();
 
         const sf::Font &getFont() const;
 

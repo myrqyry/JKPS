@@ -232,6 +232,16 @@ void Menu::handleEvent()
             closeWindow();
             return;
         }
+
+        if (event.type == sf::Event::Resized)
+        {
+            // Menu uses a fixed layout. Snap back to the designed size so the
+            // tab strip and parameter grid stay aligned instead of being cut off.
+            const auto menuSize = sf::Vector2u(959u, 700u);
+            if (mWindow.getSize() != menuSize)
+                mWindow.setSize(menuSize);
+            mWindow.setView(mView);
+        }
     }
 }
 
@@ -275,9 +285,17 @@ void Menu::update()
 
 void Menu::render() 
 {
+    drawContentLayer();
+    drawChromeLayer();
     mWindow.setView(mView);
 
-    mWindow.clear(sf::Color(45,45,45));
+    mWindow.display();
+}
+
+void Menu::drawContentLayer()
+{
+    mWindow.setView(mView);
+    mWindow.clear(Settings::UiTokens::CustomizationSurface);
 
     const auto container = mTabParameters.at(mSelectedTab);
     auto it = mParameterLines.find(container.front());
@@ -286,28 +304,23 @@ void Menu::render()
     assert(end != mParameterLines.end());
 
     for (; it != end; ++it)
-    {
         mWindow.draw(*it->second);
-    }
 
     for (const auto &[id, block] : mKeyBlocks)
-    {
         mWindow.draw(*block);
-    }
+}
 
-    auto transform = sf::Transform::Identity;
+void Menu::drawChromeLayer()
+{
     mWindow.setView(mWindow.getDefaultView());
 
     mWindow.draw(mTabsBackground);
+
+    const auto transform = sf::Transform::Identity;
     for (const auto &elem : mTabs)
-    {
         mWindow.draw(*elem, transform);
-    }
+
     mWindow.draw(mSliderBar);
-
-    mWindow.setView(mView);
-
-    mWindow.display();
 }
 
 void Menu::openWindow()
@@ -316,7 +329,7 @@ void Menu::openWindow()
 #ifdef _WIN32
     style = sf::Style::Close;
 #elif __linux__
-    style = sf::Style::Default;
+    style = sf::Style::Close;
 #else
 #error Unsupported compiler
 #endif
@@ -453,7 +466,9 @@ void Menu::buildMenuTabs()
     addTab("Main info", tabSize);
 
     mTabsBackground.setSize(sf::Vector2f(tabSize.x + offset.x * 2.f, 700.f));
-    mTabsBackground.setFillColor(sf::Color(35, 35, 35));
+    mTabsBackground.setFillColor(Settings::UiTokens::CustomizationSurfaceVariant);
+    mTabsBackground.setOutlineThickness(1.f);
+    mTabsBackground.setOutlineColor(Settings::UiTokens::CustomizationOutline);
 }
 
 void buildTab(Menu::KeyBlock &container, sf::Vector2i tabCoords, size_t key)
@@ -724,6 +739,7 @@ void Menu::buildParametersMap()
 
     mParameters.emplace(std::make_pair(LogicalParameter::ID::OtherSaveStats,              new LogicalParameter(LogicalParameter::Type::Bool,          &Settings::SaveStats,                                   "Update statistics on quit", "False")));
     mParameters.emplace(std::make_pair(LogicalParameter::ID::OtherShowOppOnAlt,           new LogicalParameter(LogicalParameter::Type::Bool,          &Settings::ShowOppOnAlt,                                "Show opposite key values on alt press", "True")));
+    mParameters.emplace(std::make_pair(LogicalParameter::ID::OtherReduceMotion,           new LogicalParameter(LogicalParameter::Type::Bool,          &Settings::ReduceMotion,                                "Reduce motion in customization windows", "False")));
     mParameters.emplace(std::make_pair(LogicalParameter::ID::OtherMultpl,                 new LogicalParameter(LogicalParameter::Type::Unsigned,      &Settings::ButtonPressMultiplier,                       "Value to multiply on click", "1", 0, 1000000)));
 
     mParameters.emplace(std::make_pair(LogicalParameter::ID::SaveStatMaxKPS,              new LogicalParameter(LogicalParameter::Type::Float,         &Settings::MaxKPS,                                      "Saved max KPS", "0", 0u, static_cast<float>(INT_MAX))));

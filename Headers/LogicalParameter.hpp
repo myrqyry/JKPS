@@ -4,6 +4,7 @@
 #include <SFML/Graphics/Color.hpp>
 
 #include <cassert>
+#include <algorithm>
 #include <string>
 #include <variant>
 
@@ -594,6 +595,7 @@ struct LogicalParameter
 
             OtherSaveStats,
             OtherShowOppOnAlt,
+            OtherReduceMotion,
             OtherMultpl,
 
             SaveStatMaxKPS,
@@ -680,19 +682,13 @@ struct LogicalParameter
         const Type mType;
         const std::string mParName;
         float mLowLimits, mHighLimits;
-        bool mChanged;
 
     private:
+        bool mChanged;
         ValuePtr mVal;
         const std::string mDefValStr;
         std::string mValStr;
 };
-
-template<typename T>
-T clamp(T val, T low, T high)
-{
-	return low > val ? low : val > high ? high : val;
-}
 
 template <typename T>
 void LogicalParameter::setDigit(T var)
@@ -702,15 +698,15 @@ void LogicalParameter::setDigit(T var)
     switch(mType)
     {
 		case Type::Unsigned: 
-			*std::get<unsigned *>(mVal) = static_cast<unsigned>(clamp<float>(static_cast<float>(var), mLowLimits, mHighLimits));
+			*std::get<unsigned *>(mVal) = static_cast<unsigned>(std::clamp(static_cast<float>(var), mLowLimits, mHighLimits));
 			mValStr = std::to_string(static_cast<int>(*std::get<unsigned *>(mVal)));
 			break;
         case Type::Int: 
-			*std::get<int *>(mVal) = static_cast<int>(clamp<float>(static_cast<float>(var), mLowLimits, mHighLimits));
+			*std::get<int *>(mVal) = static_cast<int>(std::clamp(static_cast<float>(var), mLowLimits, mHighLimits));
 			mValStr = std::to_string(static_cast<int>(*std::get<int *>(mVal)));
 			break;
         case Type::Float: 
-			*std::get<float *>(mVal) = clamp<float>(static_cast<float>(var), mLowLimits, mHighLimits);
+			*std::get<float *>(mVal) = std::clamp(static_cast<float>(var), mLowLimits, mHighLimits);
 			mValStr = std::to_string(static_cast<int>(*std::get<float *>(mVal))); /*+ 1 dec digit*/
 			break;
         

@@ -294,6 +294,16 @@ void StyleWizard::processInput()
                 closeWindow();
             }
         }
+
+        if (event.type == sf::Event::Resized)
+        {
+            // The wizard is designed as a fixed canvas; snap back to the
+            // authored size so step layout and footer controls stay aligned.
+            const auto windowSize = sf::Vector2u(900u, 800u);
+            if (mWindow.getSize() != windowSize)
+                mWindow.setSize(windowSize);
+            mWindow.setView(sf::View({ 0.f, 0.f, static_cast<float>(windowSize.x), static_cast<float>(windowSize.y) }));
+        }
     }
 
     switch (mCurrentStep)
@@ -327,9 +337,10 @@ void StyleWizard::render()
     if (mStatusTimer > 0.f)
         mStatusTimer -= 0.016f;
 
-    mWindow.clear(sf::Color(30, 30, 30));
-
+    mWindow.clear(Settings::UiTokens::CustomizationSurface);
+    drawBackdrop();
     drawStepIndicator();
+    drawFooterRail();
 
     switch (mCurrentStep)
     {
@@ -356,6 +367,34 @@ void StyleWizard::render()
     drawStatusMessage();
 
     mWindow.display();
+}
+
+void StyleWizard::drawBackdrop()
+{
+    sf::RectangleShape frame;
+    frame.setPosition(18.f, 18.f);
+    frame.setSize(sf::Vector2f(864.f, 764.f));
+    frame.setFillColor(Settings::UiTokens::CustomizationSurfaceVariant);
+    frame.setOutlineThickness(1.f);
+    frame.setOutlineColor(Settings::UiTokens::CustomizationOutline);
+    mWindow.draw(frame);
+
+    sf::RectangleShape accent;
+    accent.setPosition(18.f, 18.f);
+    accent.setSize(sf::Vector2f(864.f, 6.f));
+    accent.setFillColor(Settings::UiTokens::CustomizationAccent);
+    mWindow.draw(accent);
+}
+
+void StyleWizard::drawFooterRail()
+{
+    sf::RectangleShape footer;
+    footer.setPosition(18.f, 700.f);
+    footer.setSize(sf::Vector2f(864.f, 82.f));
+    footer.setFillColor(Settings::UiTokens::CustomizationSurface);
+    footer.setOutlineThickness(1.f);
+    footer.setOutlineColor(Settings::UiTokens::CustomizationOutline);
+    mWindow.draw(footer);
 }
 
 void StyleWizard::drawWelcomeStep()
@@ -2025,8 +2064,8 @@ bool StyleWizard::isButtonHovered(sf::Vector2i mousePos, const sf::FloatRect &bo
 
 void StyleWizard::drawButton(const std::string &text, sf::Vector2f position, sf::Vector2f size, bool hovered, int shape)
 {
-    sf::Color baseColor = hovered ? sf::Color(70, 130, 180, 255) : sf::Color(50, 50, 50, 255);
-    sf::Color outlineColor = hovered ? sf::Color(100, 180, 255, 255) : sf::Color(80, 80, 80, 255);
+    const auto baseColor = hovered ? Settings::UiTokens::CustomizationAccent : Settings::UiTokens::CustomizationSurfaceVariant;
+    const auto outlineColor = hovered ? Settings::UiTokens::CustomizationFocus : Settings::UiTokens::CustomizationOutline;
 
     if (shape == 0)
     {
@@ -2136,7 +2175,7 @@ void StyleWizard::drawButton(const std::string &text, sf::Vector2f position, sf:
     sf::Text buttonText;
     buttonText.setFont(getFont());
     buttonText.setString(text);
-    buttonText.setCharacterSize(18);
+    buttonText.setCharacterSize(Settings::UiTokens::CustomizationBodyTextSize);
     buttonText.setFillColor(sf::Color::White);
     buttonText.setPosition(position.x + size.x / 2 - buttonText.getLocalBounds().width / 2,
                           position.y + size.y / 2 - buttonText.getLocalBounds().height / 2);
@@ -2153,9 +2192,9 @@ void StyleWizard::drawToggle(const std::string &label, bool value, sf::Vector2f 
     sf::RectangleShape box;
     box.setSize(sf::Vector2f(24.f, 24.f));
     box.setPosition(position);
-    box.setFillColor(value ? sf::Color(100, 180, 100, 255) : sf::Color(60, 60, 60, 255));
+    box.setFillColor(value ? Settings::UiTokens::CustomizationAccent : Settings::UiTokens::CustomizationSurfaceVariant);
     box.setOutlineThickness(2.f);
-    box.setOutlineColor(value ? sf::Color(150, 220, 150, 255) : sf::Color(100, 100, 100, 255));
+    box.setOutlineColor(value ? Settings::UiTokens::CustomizationFocus : Settings::UiTokens::CustomizationOutline);
     mWindow.draw(box);
 
     if (value)
@@ -2170,7 +2209,7 @@ void StyleWizard::drawToggle(const std::string &label, bool value, sf::Vector2f 
     sf::Text labelText;
     labelText.setFont(getFont());
     labelText.setString(label);
-    labelText.setCharacterSize(20);
+    labelText.setCharacterSize(Settings::UiTokens::CustomizationBodyTextSize + 5u);
     labelText.setFillColor(sf::Color::White);
     labelText.setPosition(position.x + 34, position.y - 2);
     mWindow.draw(labelText);
@@ -2191,12 +2230,20 @@ void StyleWizard::drawStatusMessage()
 {
     if (mStatusTimer > 0.f && !mStatusMessage.empty())
     {
+        sf::RectangleShape pill;
+        pill.setSize(sf::Vector2f(350.f, 34.f));
+        pill.setPosition(275.f, 668.f);
+        pill.setFillColor(Settings::UiTokens::CustomizationSurfaceVariant);
+        pill.setOutlineThickness(1.f);
+        pill.setOutlineColor(Settings::UiTokens::CustomizationAccent);
+        mWindow.draw(pill);
+
         sf::Text status;
         status.setFont(getFont());
         status.setString(mStatusMessage);
-        status.setCharacterSize(20);
-        status.setFillColor(sf::Color(100, 255, 100, 255));
-        status.setPosition(450.f - status.getLocalBounds().width / 2.f, 680.f);
+        status.setCharacterSize(Settings::UiTokens::CustomizationBodyTextSize + 2u);
+        status.setFillColor(Settings::UiTokens::CustomizationFocus);
+        status.setPosition(450.f - status.getLocalBounds().width / 2.f, 674.f);
         mWindow.draw(status);
     }
 }
@@ -2230,24 +2277,36 @@ void StyleWizard::drawStepIndicator()
     {
         sf::CircleShape dot(6.f);
         dot.setPosition(startX + static_cast<float>(i) * stepWidth - 6.f, yPos);
-        dot.setFillColor(static_cast<int>(i) == currentStepIdx ? sf::Color(100, 180, 255, 255) : sf::Color(80, 80, 80, 255));
+        dot.setFillColor(static_cast<int>(i) == currentStepIdx ? Settings::UiTokens::CustomizationAccent : Settings::UiTokens::CustomizationOutline);
         mWindow.draw(dot);
 
         sf::Text label;
         label.setFont(getFont());
         label.setString(labels[i]);
-        label.setCharacterSize(14);
-        label.setFillColor(static_cast<int>(i) == currentStepIdx ? sf::Color::White : sf::Color(120, 120, 120));
+        label.setCharacterSize(Settings::UiTokens::CustomizationBodyTextSize - 1u);
+        label.setFillColor(static_cast<int>(i) == currentStepIdx ? sf::Color::White : sf::Color(170, 170, 170));
         label.setPosition(startX + static_cast<float>(i) * stepWidth - label.getLocalBounds().width / 2.f, yPos + 14.f);
         mWindow.draw(label);
     }
+
+    sf::RectangleShape rail;
+    rail.setPosition(startX + 6.f, yPos + 6.f);
+    rail.setSize(sf::Vector2f(totalWidth - 12.f, 2.f));
+    rail.setFillColor(Settings::UiTokens::CustomizationOutline);
+    mWindow.draw(rail);
+
+    sf::RectangleShape progress;
+    progress.setPosition(startX + 6.f, yPos + 6.f);
+    progress.setSize(sf::Vector2f(stepWidth * static_cast<float>(currentStepIdx), 2.f));
+    progress.setFillColor(Settings::UiTokens::CustomizationAccent);
+    mWindow.draw(progress);
 }
 
 void StyleWizard::drawPreviewButton(sf::Color buttonColor, sf::Color textColor, sf::Vector2f position)
 {
     sf::Vector2f size(120.f, 50.f);
     sf::Color baseColor = buttonColor;
-    sf::Color outlineColor = mSettings.borderColor;
+    sf::Color outlineColor = Settings::UiTokens::CustomizationOutline;
 
     if (mSettings.buttonShape == 0)
     {
@@ -2416,18 +2475,19 @@ void StyleWizard::drawPreviewButton(sf::Color buttonColor, sf::Color textColor, 
 void StyleWizard::drawAnimStylePreview(int style, sf::Vector2f position, float scale)
 {
     static sf::Clock clock;
-    const float t = clock.getElapsedTime().asSeconds();
+    const auto t = clock.getElapsedTime().asSeconds();
+    const auto reduceMotion = Settings::ReduceMotion;
     const float pulseBase = 1.f + (scale - 1.f) * 0.12f;
-    const float pulse = pulseBase + std::sin(t * 5.f) * 0.04f;
-    const float bounce = std::fabs(std::sin(t * 4.f)) * 8.f;
-    const float wave = std::sin(t * 3.f) * 10.f;
+    const float pulse = reduceMotion ? pulseBase : pulseBase + std::sin(t * 5.f) * 0.04f;
+    const float bounce = reduceMotion ? 0.f : std::fabs(std::sin(t * 4.f)) * 8.f;
+    const float wave = reduceMotion ? 0.f : std::sin(t * 3.f) * 10.f;
 
     sf::RectangleShape panel;
     panel.setSize(sf::Vector2f(300.f, 56.f));
     panel.setPosition(position);
-    panel.setFillColor(sf::Color(35, 35, 35, 230));
+    panel.setFillColor(Settings::UiTokens::CustomizationSurface);
     panel.setOutlineThickness(2.f);
-    panel.setOutlineColor(sf::Color(100, 180, 255, 180));
+    panel.setOutlineColor(Settings::UiTokens::CustomizationAccent);
     mWindow.draw(panel);
 
     const char *styleName =
@@ -2441,7 +2501,7 @@ void StyleWizard::drawAnimStylePreview(int style, sf::Vector2f position, float s
     sf::Text label;
     label.setFont(getFont());
     label.setString(std::string("Style: ") + styleName);
-    label.setCharacterSize(16);
+    label.setCharacterSize(Settings::UiTokens::CustomizationBodyTextSize);
     label.setFillColor(sf::Color::White);
     label.setPosition(position.x + 12.f, position.y + 7.f);
     mWindow.draw(label);
@@ -2482,7 +2542,7 @@ void StyleWizard::drawAnimStylePreview(int style, sf::Vector2f position, float s
     if (hintText.empty())
         hintText = "No animations enabled";
     hint.setString(hintText);
-    hint.setCharacterSize(13);
+    hint.setCharacterSize(Settings::UiTokens::CustomizationBodyTextSize - 2u);
     hint.setFillColor(sf::Color(180, 180, 180));
     hint.setPosition(position.x + 12.f, position.y + 31.f);
     mWindow.draw(hint);
@@ -2514,20 +2574,20 @@ void StyleWizard::drawColorSliders(sf::Color &color, sf::Vector2f position)
         sf::RectangleShape bg;
         bg.setSize(sf::Vector2f(barWidth, barHeight));
         bg.setPosition(position.x + 30, position.y + static_cast<float>(i) * spacing + 10);
-        bg.setFillColor(sf::Color(60, 60, 60));
+        bg.setFillColor(Settings::UiTokens::CustomizationSurface);
         mWindow.draw(bg);
 
         float fillWidth = barWidth * channels[i].ref / 255.f;
         sf::RectangleShape fill;
         fill.setSize(sf::Vector2f(fillWidth, barHeight));
         fill.setPosition(position.x + 30, position.y + static_cast<float>(i) * spacing + 10);
-        fill.setFillColor(i == 0 ? sf::Color(255, 80, 80, 200) : i == 1 ? sf::Color(80, 255, 80, 200) : sf::Color(80, 80, 255, 200));
+        fill.setFillColor(i == 0 ? Settings::UiTokens::CustomizationAccent : i == 1 ? sf::Color(100, 220, 140) : sf::Color(120, 160, 255));
         mWindow.draw(fill);
 
         sf::Text value;
         value.setFont(getFont());
         value.setString(std::to_string(static_cast<int>(channels[i].ref)));
-        value.setCharacterSize(14);
+        value.setCharacterSize(Settings::UiTokens::CustomizationBodyTextSize - 1u);
         value.setFillColor(sf::Color(200, 200, 200));
         value.setPosition(position.x + 30 + barWidth + 10, position.y + static_cast<float>(i) * spacing + 8);
         mWindow.draw(value);
@@ -2577,7 +2637,7 @@ void StyleWizard::drawNumericSlider(const std::string &label, int &value, int mi
 {
     sf::Text txtLabel;
     txtLabel.setFont(getFont());
-    txtLabel.setCharacterSize(14);
+    txtLabel.setCharacterSize(Settings::UiTokens::CustomizationBodyTextSize - 1u);
     txtLabel.setFillColor(sf::Color::White);
     txtLabel.setString(label);
     txtLabel.setPosition(position);
@@ -2587,13 +2647,13 @@ void StyleWizard::drawNumericSlider(const std::string &label, int &value, int mi
     const float barHeight = 8.f;
     sf::RectangleShape bg(sf::Vector2f(barWidth, barHeight));
     bg.setPosition(position.x + 150.f, position.y + 4.f);
-    bg.setFillColor(sf::Color(60, 60, 60));
+    bg.setFillColor(Settings::UiTokens::CustomizationSurface);
     mWindow.draw(bg);
 
     float pct = static_cast<float>(value - minVal) / static_cast<float>(maxVal - minVal);
     sf::RectangleShape fill(sf::Vector2f(barWidth * pct, barHeight));
     fill.setPosition(position.x + 150.f, position.y + 4.f);
-    fill.setFillColor(sf::Color(120, 180, 255));
+    fill.setFillColor(Settings::UiTokens::CustomizationAccent);
     mWindow.draw(fill);
 
     sf::CircleShape handle(6.f);

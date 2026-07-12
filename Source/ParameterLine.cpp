@@ -43,8 +43,11 @@ ParameterLine::ParameterLine(
 , mIsThRunning(false)
 {
     mRectLine.setFillColor(pickColor(mType));
+    mRectLine.setOutlineThickness(1.f);
+    mRectLine.setOutlineColor(Settings::UiTokens::CustomizationOutline);
     mParameterName.setString(parameter->mParName);
     mParameterName.setFont(fonts.get(Fonts::Parameter));
+    mParameterName.setFillColor(sf::Color::White);
     setCharacterSize(20u);
 
     buildButtons(parameter->getValStr(), fonts, textures);
@@ -54,7 +57,7 @@ ParameterLine::ParameterLine(
     if (mCursor.getPosition() == sf::Vector2f())
     {
         mCursor.setOutlineThickness(1);
-        mCursor.setFillColor(sf::Color::White);
+        mCursor.setFillColor(Settings::UiTokens::CustomizationFocus);
         mCursor.setOutlineColor(sf::Color::Black);
         mCursor.setOrigin(mCursor.getSize() / 2.f);
         mCursor.setPosition(0, mRectLine.getSize().y / 2);
@@ -554,6 +557,7 @@ void ParameterLine::buildLimits(const FontHolder &fonts)
     {
         mLimits.setFont(fonts.get(Fonts::Parameter));
         mLimits.setCharacterSize(10u);
+        mLimits.setFillColor(sf::Color(200, 200, 200));
         mLimits.setOrigin(mLimits.getLocalBounds().left, mLimits.getLocalBounds().top);
         mLimits.setPosition(mParameterName.getLocalBounds().left, mParameterName.getLocalBounds().top + 
             mParameterName.getLocalBounds().height + 4.f);
@@ -638,9 +642,9 @@ sf::Color ParameterLine::pickColor(LogicalParameter::Type type) const
     switch(type)
     {
         case LogicalParameter::Type::Empty: return sf::Color::Transparent;
-        case LogicalParameter::Type::Collection: return sf::Color(25,25,25);
+        case LogicalParameter::Type::Collection: return Settings::UiTokens::CustomizationSurfaceVariant;
         case LogicalParameter::Type::Hint: return sf::Color(150, 0, 0);
-        default: return sf::Color(30,30,30);
+        default: return Settings::UiTokens::CustomizationSurface;
     }
 }
 
@@ -1425,6 +1429,7 @@ ParameterLine::ID ParameterLine::parIdToParLineId(LogicalParameter::ID id)
 
         case LogicalParameter::ID::OtherSaveStats: return ParameterLine::ID::OtherSaveStats;
         case LogicalParameter::ID::OtherShowOppOnAlt: return ParameterLine::ID::OtherShowOppOnAlt;
+        case LogicalParameter::ID::OtherReduceMotion: return ParameterLine::ID::OtherReduceMotion;
         case LogicalParameter::ID::OtherMultpl: return ParameterLine::ID::OtherMultpl;
 
         case LogicalParameter::ID::SaveStatMaxKPS: return ParameterLine::ID::SaveStatMaxKPS;

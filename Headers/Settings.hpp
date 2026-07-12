@@ -138,13 +138,24 @@ namespace Settings
     extern bool isGreenscreenSet;
 
     // [Main window]
-    extern bool WindowTitleBar;
-    extern bool WindowResizable;
+    namespace Window
+    {
+        extern bool WindowTitleBar;
+        extern bool WindowResizable;
 	extern unsigned RenderUpdateFrequency;
-    extern int WindowBonusSizeTop;
-    extern int WindowBonusSizeBottom;
-    extern int WindowBonusSizeLeft;
-    extern int WindowBonusSizeRight;
+        extern int WindowBonusSizeTop;
+        extern int WindowBonusSizeBottom;
+        extern int WindowBonusSizeLeft;
+        extern int WindowBonusSizeRight;
+    }
+
+    inline bool &WindowTitleBar = Window::WindowTitleBar;
+    inline bool &WindowResizable = Window::WindowResizable;
+	inline unsigned &RenderUpdateFrequency = Window::RenderUpdateFrequency;
+    inline int &WindowBonusSizeTop = Window::WindowBonusSizeTop;
+    inline int &WindowBonusSizeBottom = Window::WindowBonusSizeBottom;
+    inline int &WindowBonusSizeLeft = Window::WindowBonusSizeLeft;
+    inline int &WindowBonusSizeRight = Window::WindowBonusSizeRight;
 
     // [KPS window]
     extern bool KPSWindowEnabledFromStart;
@@ -180,9 +191,18 @@ namespace Settings
     extern Container<float> KeyPressAdvFixedHeight;
 
     // [Other]
-    extern bool SaveStats;
-    extern bool ShowOppOnAlt;
-    extern unsigned ButtonPressMultiplier;
+    namespace Other
+    {
+        extern bool SaveStats;
+        extern bool ShowOppOnAlt;
+        extern unsigned ButtonPressMultiplier;
+        extern bool ReduceMotion;
+    }
+
+    inline bool &SaveStats = Other::SaveStats;
+    inline bool &ShowOppOnAlt = Other::ShowOppOnAlt;
+    inline unsigned &ButtonPressMultiplier = Other::ButtonPressMultiplier;
+    inline bool &ReduceMotion = Other::ReduceMotion;
 
     // Default assets
     extern unsigned char* KeyCountersDefaultFont;
@@ -227,5 +247,15 @@ namespace Settings
         extern sf::Color SurfaceColor;
         extern sf::Color AccentColor;
         extern sf::Color BorderColor;
+
+        extern sf::Color CustomizationSurface;
+        extern sf::Color CustomizationSurfaceVariant;
+        extern sf::Color CustomizationAccent;
+        extern sf::Color CustomizationOutline;
+        extern sf::Color CustomizationFocus;
+        extern unsigned CustomizationHeaderTextSize;
+        extern unsigned CustomizationBodyTextSize;
+        extern float CustomizationSpacing;
+        extern float CustomizationRadius;
     }
 }

@@ -123,6 +123,8 @@ bool ScaleBackground;
 bool isGreenscreenSet;
 
 // [Main window]
+namespace Window
+{
 bool WindowTitleBar;
 bool WindowResizable = true;
 unsigned RenderUpdateFrequency;
@@ -130,6 +132,7 @@ int WindowBonusSizeTop;
 int WindowBonusSizeBottom;
 int WindowBonusSizeLeft;
 int WindowBonusSizeRight;
+}
 
 // [KPS window]
 bool KPSWindowEnabledFromStart;
@@ -165,9 +168,13 @@ Container<float> KeyPressAdvWidthScale;
 Container<float> KeyPressAdvFixedHeight;
 
 // [Other]
+namespace Other
+{
 bool SaveStats;
 bool ShowOppOnAlt;
 unsigned ButtonPressMultiplier;
+bool ReduceMotion = false;
+}
 
 // Default assets
 unsigned char* StatisticsDefaultFont = MainProgramFont;
@@ -207,6 +214,15 @@ unsigned SecondaryTextSize = 14u;
 sf::Color SurfaceColor = sf::Color(30, 30, 30);
 sf::Color AccentColor = sf::Color(0, 180, 255);
 sf::Color BorderColor = sf::Color(60, 60, 60);
+sf::Color CustomizationSurface = sf::Color(28, 28, 32);
+sf::Color CustomizationSurfaceVariant = sf::Color(40, 40, 46);
+sf::Color CustomizationAccent = sf::Color(0, 180, 255);
+sf::Color CustomizationOutline = sf::Color(64, 64, 72);
+sf::Color CustomizationFocus = sf::Color(255, 196, 0);
+unsigned CustomizationHeaderTextSize = 22u;
+unsigned CustomizationBodyTextSize = 15u;
+float CustomizationSpacing = 10.f;
+float CustomizationRadius = 10.f;
 }
 
 } // !namespace Settings

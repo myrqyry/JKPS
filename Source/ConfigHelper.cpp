@@ -346,6 +346,11 @@ void readParameter(LogicalParameter &par, std::string collection)
         return;
     }
 
+    if (!isParamFound
+    && collection == "[Other]"
+    && par.mParName == "Reduce motion in customization windows")
+        return;
+
     if (valStr == "Default")
     {
         return;

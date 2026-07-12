@@ -33,6 +33,16 @@ void KPSWindow::handleOwnEvent()
 
         if (event.type == sf::Event::Closed)
             mWindow.close();
+
+        if (event.type == sf::Event::Resized)
+        {
+            // Fixed-size readout window: restore the configured size so text
+            // remains readable and the layout does not clip.
+            const auto windowSize = Settings::KPSWindowSize;
+            if (mWindow.getSize() != windowSize)
+                mWindow.setSize(windowSize);
+            mWindow.setView(sf::View({ 0.f, 0.f, static_cast<float>(windowSize.x), static_cast<float>(windowSize.y) }));
+        }
     }
 }
 
@@ -103,7 +113,7 @@ void KPSWindow::openWindow()
 #ifdef _WIN32
     style = sf::Style::Close;
 #elif __linux__
-    style = sf::Style::Default;
+    style = sf::Style::Close;
 #else
 #error Unsupported compiler
 #endif
