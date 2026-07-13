@@ -30,7 +30,9 @@ void StatisticsPositioner::operator()()
 
     const auto width = static_cast<float>(Settings::StatisticsTextPosition.x) + static_cast<float>(Application::getWindowWidth()) - static_cast<float>(Settings::WindowBonusSizeRight);
     const auto totalHeight = getTotalHeight();
-    const auto startHeight = static_cast<float>(Settings::WindowBonusSizeTop) + static_cast<float>(Settings::GfxButtonTextureSize.y) / 2.f - totalHeight / 2.f - static_cast<float>(Settings::StatisticsTextPosition.y);
+    const auto startHeight = static_cast<float>(Settings::WindowBonusSizeTop)
+        + std::max(0.f, (static_cast<float>(Settings::GfxButtonTextureSize.y) - totalHeight) / 2.f)
+        - static_cast<float>(Settings::StatisticsTextPosition.y);
     auto currentHeight = 0.f;
 
     auto idx = 0u;

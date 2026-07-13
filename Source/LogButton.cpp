@@ -87,18 +87,22 @@ void LogButton::accumulateBeatsPerMinute()
 void LogButton::reset()
 {
     Settings::KeysTotal[mBtnIdx] = 0;
-    Settings::Total = 0;
-    Settings::MaxKPS = 0.f;
-    statMaxKeysPerSecond = 0.f;
-    statBeatsPerMinute = 0.f;
-    statTotal = 0;
-    statKeysPerSecond = 0.f;
     mTotal = 0;
     mKeysPerSecond = 0.f;
     for (auto &elem : mBuffer)
         elem = 0;
     for (auto &elem : mPrevKpsBuffer)
         elem = 0;
+}
+
+void LogButton::resetGlobal()
+{
+    Settings::Total = 0;
+    Settings::MaxKPS = 0.f;
+    statMaxKeysPerSecond = 0.f;
+    statBeatsPerMinute = 0.f;
+    statTotal = 0;
+    statKeysPerSecond = 0.f;
 }
 
 float LogButton::getKeysPerSecond()

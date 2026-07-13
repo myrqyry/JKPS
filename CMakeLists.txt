@@ -40,8 +40,8 @@ target_compile_options(
 )
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_STRIP} $<TARGET_FILE:${PROJECT_NAME}>
-    COMMENT "Stripping debug symbols from ${PROJECT_NAME}"
+    COMMAND $<$<CONFIG:Release>:${CMAKE_STRIP}> $<$<CONFIG:Release>:$<TARGET_FILE:${PROJECT_NAME}>>
+    COMMENT "Stripping debug symbols from ${PROJECT_NAME} (Release only)"
 )
 
 

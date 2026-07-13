@@ -9,7 +9,9 @@
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Graphics/RenderStates.hpp>
 #include <SFML/Graphics/VertexArray.hpp>
+#include <SFML/Graphics/ConvexShape.hpp>
 
+#include <cmath>
 #include <algorithm>
 #include <cmath>
 
@@ -444,9 +446,9 @@ void GfxButton::RectEmitter::update(float deltaSeconds, bool keyState, bool prev
             auto &middleVertex = mMiddleVertecies[j];
 
             // Limit the square to go beyond the line length
-            auto move = [len, speed, deltaSeconds] (sf::Vertex &vertex)
+            auto move = [len, speed] (sf::Vertex &vertex)
                 {
-                    vertex.position.y = -std::min(std::abs(vertex.position.y + speed * deltaSeconds * getConstantSpeedScale()), len);
+                    vertex.position.y = -std::min(std::abs(vertex.position.y + speed), len);
                 };
             move(middleVertex);
 
@@ -476,12 +478,12 @@ void GfxButton::RectEmitter::update(float deltaSeconds, bool keyState, bool prev
     if (keyState)
     {
         const auto offset = mUsedRectIndices.back() * 4ul;
-        mMiddleVertecies[offset + 2ul].position.y = 
-        mMiddleVertecies[offset + 3ul].position.y -= speed * deltaSeconds * getConstantSpeedScale();
+        mMiddleVertecies[offset + 2ul].position.y =
+        mMiddleVertecies[offset + 3ul].position.y -= speed;
 
         if (minHeight > 0 && std::abs(mMiddleVertecies[offset].position.y) > minHeight)
         {
-            mMiddleVertecies[offset + 2ul].position.y = 
+            mMiddleVertecies[offset + 2ul].position.y =
             mMiddleVertecies[offset + 3ul].position.y = mMiddleVertecies[offset].position.y + minHeight;
         }
     }
@@ -491,8 +493,8 @@ void GfxButton::RectEmitter::update(float deltaSeconds, bool keyState, bool prev
     {
         const auto offset = mUsedRectIndices.back() * 4ul;
 
-        mMiddleVertecies[offset + 2ul].position.y = 
-        mMiddleVertecies[offset + 3ul].position.y -= speed * deltaSeconds * getConstantSpeedScale();
+        mMiddleVertecies[offset + 2ul].position.y =
+        mMiddleVertecies[offset + 3ul].position.y -= speed;
 
         if (minHeight > 0 && std::abs(mMiddleVertecies[offset].position.y) > minHeight)
         {
@@ -507,10 +509,6 @@ void GfxButton::RectEmitter::draw(sf::RenderTarget &target, sf::RenderStates sta
     states.transform = getPressRectTransform(states.transform);
 
     target.draw(mMiddleVertecies, states);
-
-    // states.texture = &mTexture;
-    // target.draw(mTopVertecies, states);
-    // target.draw(mBottomVertecies, states);
 }
 
 void GfxButton::RectEmitter::setPosition(sf::Vector2f position)
@@ -555,24 +553,15 @@ void GfxButton::RectEmitter::create(float deltaSeconds, sf::Vector2f buttonSize)
     const auto origSpeed = !advMode ? Settings::KeyPressVisSpeed : 
         Settings::KeyPressVisAdvSpeed[mBtnIdx];
     const auto speed = (-origSpeed * deltaSeconds * getConstantSpeedScale()) / 10.f;
-    // const auto wScale = (!advMode ? Settings::KeyPressWidthScale : Settings::KeyPressAdvWidthScale[mBtnIdx]) / 100.f;
-    // buttonSize.x *= wScale;
 
     const auto rectSize = sf::Vector2f(buttonSize.x, speed);
     const auto halfRectSize = rectSize / 2.f;
-
-    // const auto textureSize = static_cast<sf::Vector2f>(mTexture.getSize());
 
     const auto rectIndex = mAvailableRectIndices.back();
     const auto firstVertexIndex = rectIndex * 4ul;
 
     // 0 Top left, 1 Top right, 2 Bottom right, 3 Bottom left
     sf::Vertex middleVertices[4];
-
-    // middleVertices[0].position = sf::Vector2f(-halfRectSize.x, -halfRectSize.y);
-    // middleVertices[1].position = sf::Vector2f(+halfRectSize.x, -halfRectSize.y);
-    // middleVertices[2].position = sf::Vector2f(+halfRectSize.x, -halfRectSize.y);
-    // middleVertices[3].position = sf::Vector2f(-halfRectSize.x, -halfRectSize.y);
 
     middleVertices[0].position = sf::Vector2f(-halfRectSize.x, -rectSize.y);
     middleVertices[1].position = sf::Vector2f(+halfRectSize.x, -rectSize.y);
@@ -582,37 +571,6 @@ void GfxButton::RectEmitter::create(float deltaSeconds, sf::Vector2f buttonSize)
     pushVertecies(mMiddleVertecies, middleVertices, firstVertexIndex, buttonSize);
 
 
-    // sf::Vertex topVertices[4];
-
-    // topVertices[0].position = sf::Vector2f(-halfRectSize.x, -halfRectSize.y * 2.f);
-    // topVertices[1].position = sf::Vector2f(+halfRectSize.x, -halfRectSize.y * 2.f);
-    // topVertices[2].position = sf::Vector2f(+halfRectSize.x, -halfRectSize.y);
-    // topVertices[3].position = sf::Vector2f(-halfRectSize.x, -halfRectSize.y);
-    
-    // // Make the texture be rotated
-    // topVertices[0].texCoords = sf::Vector2f(+textureSize.x, +textureSize.y);
-    // topVertices[1].texCoords = sf::Vector2f(0.f,            +textureSize.y);
-    // topVertices[2].texCoords = sf::Vector2f(0.f,            0.f);
-    // topVertices[3].texCoords = sf::Vector2f(+textureSize.x, 0.f);
-
-    // pushVertecies(mTopVertecies, topVertices, firstVertexIndex, buttonSize);
-
-
-    // sf::Vertex bottomVertices[4];
-
-    // bottomVertices[0].position = sf::Vector2f(-halfRectSize.x, -halfRectSize.y);
-    // bottomVertices[1].position = sf::Vector2f(+halfRectSize.x, -halfRectSize.y);
-    // bottomVertices[2].position = sf::Vector2f(+halfRectSize.x, 0.f);
-    // bottomVertices[3].position = sf::Vector2f(-halfRectSize.x, 0.f);
-    
-    // bottomVertices[0].texCoords = sf::Vector2f(0.f,            0.f);
-    // bottomVertices[1].texCoords = sf::Vector2f(+textureSize.x, 0.f);
-    // bottomVertices[2].texCoords = sf::Vector2f(+textureSize.x, +textureSize.y);
-    // bottomVertices[3].texCoords = sf::Vector2f(0.f,            +textureSize.y);
-
-    // pushVertecies(mBottomVertecies, bottomVertices, firstVertexIndex, buttonSize);
-
-    
     // Remove the used index from the available rect indices list
     // and push it to the used one
     mAvailableRectIndices.pop_back();
@@ -622,8 +580,6 @@ void GfxButton::RectEmitter::create(float deltaSeconds, sf::Vector2f buttonSize)
 
 void GfxButton::RectEmitter::scaleTexture(sf::Vector2f /*buttonSize*/)
 {
-    // const auto size = static_cast<sf::Vector2f>(mTexture.getSize());
-    // mTextureScale = sf::Vector2f(size.x / buttonSize.x, size.x / buttonSize.y);
 }
 
 sf::Transform GfxButton::RectEmitter::getPressRectTransform(sf::Transform transform) const
@@ -682,28 +638,42 @@ void GfxButton::drawVectorShape(sf::RenderTarget &target, sf::RenderStates state
     }
     else if (shape == 2) // Pill
     {
-        float radius = adjSize.y / 2.f;
-        sf::RectangleShape rect;
-        rect.setPosition(adjPos.x + radius, adjPos.y);
-        rect.setSize(sf::Vector2f(adjSize.x - 2.f * radius, adjSize.y));
-        rect.setFillColor(fillColor);
-        rect.setOutlineThickness(outlineThickness);
-        rect.setOutlineColor(outlineColor);
-        target.draw(rect, states);
+        const float radius = adjSize.y / 2.f;
+        const float leftCenterX = adjPos.x + radius;
+        const float rightCenterX = adjPos.x + adjSize.x - radius;
+        const float centerY = adjPos.y + radius;
 
-        sf::CircleShape leftCap(radius);
-        leftCap.setPosition(adjPos.x, adjPos.y);
-        leftCap.setFillColor(fillColor);
-        leftCap.setOutlineThickness(outlineThickness);
-        leftCap.setOutlineColor(outlineColor);
-        target.draw(leftCap, states);
+        const int arcSegs = 8;
+        sf::ConvexShape pill;
+        pill.setPointCount(2u + 2u * static_cast<std::size_t>(arcSegs - 1) + 2u);
+        std::size_t p = 0;
 
-        sf::CircleShape rightCap(radius);
-        rightCap.setPosition(adjPos.x + adjSize.x - 2.f * radius, adjPos.y);
-        rightCap.setFillColor(fillColor);
-        rightCap.setOutlineThickness(outlineThickness);
-        rightCap.setOutlineColor(outlineColor);
-        target.draw(rightCap, states);
+        // Top straight edge
+        pill.setPoint(p++, sf::Vector2f(leftCenterX, adjPos.y));
+        pill.setPoint(p++, sf::Vector2f(rightCenterX, adjPos.y));
+
+        // Right arc (top -> bottom)
+        for (int i = 1; i < arcSegs; ++i)
+        {
+            const float a = -3.14159265f / 2.f + (3.14159265f * static_cast<float>(i) / static_cast<float>(arcSegs));
+            pill.setPoint(p++, sf::Vector2f(rightCenterX + radius * std::cos(a), centerY + radius * std::sin(a)));
+        }
+
+        // Bottom straight edge (right -> left)
+        pill.setPoint(p++, sf::Vector2f(rightCenterX, adjPos.y + adjSize.y));
+        pill.setPoint(p++, sf::Vector2f(leftCenterX, adjPos.y + adjSize.y));
+
+        // Left arc (bottom -> top)
+        for (int i = 1; i < arcSegs; ++i)
+        {
+            const float a = 3.14159265f / 2.f + (3.14159265f * static_cast<float>(i) / static_cast<float>(arcSegs));
+            pill.setPoint(p++, sf::Vector2f(leftCenterX + radius * std::cos(a), centerY + radius * std::sin(a)));
+        }
+
+        pill.setFillColor(fillColor);
+        pill.setOutlineThickness(outlineThickness);
+        pill.setOutlineColor(outlineColor);
+        target.draw(pill, states);
     }
     else if (shape == 3) // Circle
     {
@@ -734,7 +704,7 @@ void GfxButton::drawVectorShape(sf::RenderTarget &target, sf::RenderStates state
         float cy = adjPos.y + adjSize.y / 2.f;
         float outerR = std::min(adjSize.x, adjSize.y) / 2.f;
         float innerR = outerR * 0.4f;
-        sf::VertexArray star(sf::TriangleFan, 12);
+        sf::VertexArray star(sf::TriangleFan, 11);
         star[0].position = {cx, cy};
         star[0].color = fillColor;
         for (int i = 0; i < 5; ++i)

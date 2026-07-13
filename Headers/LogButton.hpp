@@ -18,6 +18,7 @@ class LogButton
 
 		void accumulateBeatsPerMinute();
         void reset();
+        static void resetGlobal();
 
         static float getKeysPerSecond();
         static float getMaxKeysPerSecond();

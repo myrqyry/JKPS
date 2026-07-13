@@ -138,6 +138,8 @@ void Application::processInput(UpdateType type)
 			mKPSWindow->handleOwnEvent();
 		if (mGraph->isOpen())
 			mGraph->handleOwnEvent();
+		if (mStyleWizard->isWindowOpen())
+			mStyleWizard->processInput();
 	}
 }
 
@@ -246,6 +248,7 @@ void Application::handleEvent()
 
                 if (key.code == Settings::KeyToReset)
                 {
+                    LogButton::resetGlobal();
                     for (auto &button : mButtons)
                         button->reset();
                 }
@@ -268,7 +271,7 @@ void Application::handleEvent()
 
         if (event.type == sf::Event::Resized)
         {
-            auto view = sf::View(sf::FloatRect(0.f, 0.f, static_cast<float>(getWindowWidth()), static_cast<float>(getWindowHeight())));
+            auto view = sf::View(sf::FloatRect(0.f, 0.f, static_cast<float>(event.size.width), static_cast<float>(event.size.height)));
             mWindow.setView(view);
         }
     }
@@ -288,9 +291,6 @@ void Application::update(float deltaSeconds, UpdateType type)
 
 		if (mKPSWindow->isOpen())
 			mKPSWindow->update();
-
-		if (mStyleWizard->isWindowOpen())
-			mStyleWizard->processInput();
 
 		if (mGraph->isOpen())
 		    mGraph->update();
@@ -565,7 +565,7 @@ void Application::openWindow()
     mWindow.setKeyRepeatEnabled(false);
     mWindow.setFramerateLimit(getApplicationUpdateFrequency());
 #ifdef __linux__
-    if (style == sf::Style::None)
+    if (!Settings::WindowTitleBar)
     {
         auto desktop = sf::VideoMode::getDesktopMode();
         auto windowSize = mWindow.getSize();
@@ -594,7 +594,16 @@ void Application::moveWindow()
     if (mDraggingWindow && sf::Mouse::isButtonPressed(sf::Mouse::Left))
     {
         if (mWindow.hasFocus())
-            mWindow.setPosition(sf::Mouse::getPosition() - mDragGrabOffset);
+        {
+            const auto desktop = sf::VideoMode::getDesktopMode();
+            const auto windowSize = mWindow.getSize();
+            auto position = sf::Mouse::getPosition() - mDragGrabOffset;
+            const auto maxX = std::max(0, static_cast<int>(desktop.width) - static_cast<int>(windowSize.x));
+            const auto maxY = std::max(0, static_cast<int>(desktop.height) - static_cast<int>(windowSize.y));
+            position.x = std::clamp(position.x, 0, maxX);
+            position.y = std::clamp(position.y, 0, maxY);
+            mWindow.setPosition(position);
+        }
     }
     else
     {

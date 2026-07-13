@@ -232,6 +232,12 @@ void StyleWizard::openWindow(sf::Vector2i position)
     sf::ContextSettings settings;
     settings.antialiasingLevel = 8;
     mWindow.create(sf::VideoMode(900, 800), "JKPS Style Wizard", sf::Style::Close, settings);
+    const auto desktop = sf::VideoMode::getDesktopMode();
+    const auto windowSize = mWindow.getSize();
+    const auto maxX = std::max(0, static_cast<int>(desktop.width) - static_cast<int>(windowSize.x));
+    const auto maxY = std::max(0, static_cast<int>(desktop.height) - static_cast<int>(windowSize.y));
+    position.x = std::clamp(position.x, 0, maxX);
+    position.y = std::clamp(position.y, 0, maxY);
     mWindow.setPosition(position);
     mView = mWindow.getDefaultView();
     mWindow.setView(mView);
@@ -2378,7 +2384,7 @@ void StyleWizard::drawPreviewButton(sf::Color buttonColor, sf::Color textColor, 
         float cy = position.y + size.y / 2.f;
         float outerR = std::min(size.x, size.y) / 2.f;
         float innerR = outerR * 0.4f;
-        sf::VertexArray preview(sf::TriangleFan, 12);
+        sf::VertexArray preview(sf::TriangleFan, 11);
         preview[0].position = {cx, cy};
         preview[0].color = baseColor;
         for (std::size_t i = 0; i < 5; ++i)

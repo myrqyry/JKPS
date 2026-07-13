@@ -177,8 +177,11 @@ bool Button::parameterIdMatches(LogicalParameter::ID id)
         id == LogicalParameter::ID::BtnTextBPMPosition ||
 
         id == LogicalParameter::ID::BtnGfxDist ||
+        id == LogicalParameter::ID::BtnGfxTxtr ||
         id == LogicalParameter::ID::BtnGfxTxtrSz ||
         id == LogicalParameter::ID::BtnGfxTxtrClr ||
+        id == LogicalParameter::ID::BtnGfxBorderClr ||
+        id == LogicalParameter::ID::BtnGfxShape ||
 
         id == LogicalParameter::ID::AnimGfxVel ||
         id == LogicalParameter::ID::AnimGfxScl ||
@@ -190,7 +193,6 @@ bool Button::parameterIdMatches(LogicalParameter::ID id)
         id == LogicalParameter::ID::MainWndwLft ||
         id == LogicalParameter::ID::MainWndwRght ||
 
-        id == LogicalParameter::ID::BtnGfxTxtrClr ||
         id == LogicalParameter::ID::BtnTextPosAdvMode ||
         id == LogicalParameter::ID::BtnGfxAdvMode ||
         (idU >= firstTextSepValAdvPar && idU <= lastTextSepValAdvPar) ||
