@@ -235,7 +235,7 @@ bool GfxStatisticsLine::parameterIdMatches(LogicalParameter::ID id)
         id == LogicalParameter::ID::StatTextShowTotal ||
         id == LogicalParameter::ID::StatTextShowBPM ||
         (id >= LogicalParameter::ID::StatTextAdvMode && id <= LogicalParameter::ID::StatTextBPMText) ||
-        (id >= LogicalParameter::ID::BtnGfxAdvMode   && id <= LogicalParameter::ID::BtnGfxClr20) ||
+        (id >= LogicalParameter::ID::BtnGfxAdvMode   && id < static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnGfxClr) + LogicalParameter::ButtonAdvCount * 3u)) ||
         id == LogicalParameter::ID::BtnGfxTxtrSz ||
         id == LogicalParameter::ID::BtnGfxDist ||
         id == LogicalParameter::ID::MainWndwTop ||

@@ -368,16 +368,16 @@ ChangedParametersQueue &Menu::getChangedParametersQueue()
 
 void Menu::loadFonts()
 {
-    mFonts.loadFromMemory(Fonts::Parameter, RobotoMono, 1100000);
-    mFonts.loadFromMemory(Fonts::Value, RobotoMono, 1100000);
+    mFonts.loadFromMemory(Fonts::Parameter, RobotoMono, RobotoMonoSize);
+    mFonts.loadFromMemory(Fonts::Value, RobotoMono, RobotoMonoSize);
 }
 
 void Menu::loadTextures()
 {
-    mTextures.loadFromMemory(Textures::rgbCircle, RGB_Circle, 10700);
-    mTextures.loadFromMemory(Textures::vMark, vMark, 6000);
-    mTextures.loadFromMemory(Textures::xMark, xMark, 6100);
-    mTextures.loadFromMemory(Textures::Refresh, RefreshTexture, 6000);
+    mTextures.loadFromMemory(Textures::rgbCircle, RGB_Circle, RGB_CircleSize);
+    mTextures.loadFromMemory(Textures::vMark, vMark, vMarkSize);
+    mTextures.loadFromMemory(Textures::xMark, xMark, xMarkSize);
+    mTextures.loadFromMemory(Textures::Refresh, RefreshTexture, RefreshTextureSize);
 }
 
 void Menu::selectTab(unsigned idx)
@@ -393,8 +393,8 @@ void Menu::selectAdvKeyPressVisKey(unsigned idx)
         {
             return static_cast<ParameterLine::ID>(static_cast<int>(id) + val);
         };
-    auto lineToHide = increment(ParameterLine::ID::KeyPressVisAdvModeSpeed1, static_cast<int>(prevIdx * 5u));
-    auto lineToShow = increment(ParameterLine::ID::KeyPressVisAdvModeSpeed1, static_cast<int>(idx * 5u));
+    auto lineToHide = increment(ParameterLine::ID::KeyPressVisAdvModeSpeed, static_cast<int>(prevIdx * 5u));
+    auto lineToShow = increment(ParameterLine::ID::KeyPressVisAdvModeSpeed, static_cast<int>(idx * 5u));
 
     for (size_t i = 0; i < 5lu; ++i)
     {
@@ -520,19 +520,19 @@ void Menu::buildAdvKeys()
             return foundAdvBtnTextSepVal->second->getPosition();
         };
 
-    mKeyBlocks.emplace(std::make_pair(AdvancedKeys::StatText, std::make_unique<KeyBlock>(mParameterLines, ParameterLine::ID::StatTextAdvPos1, 7ul)));
+    mKeyBlocks.emplace(std::make_pair(AdvancedKeys::StatText, std::make_unique<KeyBlock>(mParameterLines, ParameterLine::ID::StatTextAdvPos, 7ul)));
     mKeyBlocks.at(AdvancedKeys::StatText)->setPosition(getOrigin(ParameterLine::ID::StatTextSpace1));
 
-    mKeyBlocks.emplace(std::make_pair(AdvancedKeys::BtnTextSepVal, std::make_unique<KeyBlock>(mParameterLines, ParameterLine::ID::BtnTextAdvVisPosition1, 4ul)));
+    mKeyBlocks.emplace(std::make_pair(AdvancedKeys::BtnTextSepVal, std::make_unique<KeyBlock>(mParameterLines, ParameterLine::ID::BtnTextAdvVisPosition, 4ul)));
     mKeyBlocks.at(AdvancedKeys::BtnTextSepVal)->setPosition(getOrigin(ParameterLine::ID::BtnTextAdvSpace1));
 
-    mKeyBlocks.emplace(std::make_pair(AdvancedKeys::BtnText, std::make_unique<KeyBlock>(mParameterLines, ParameterLine::ID::BtnTextAdvClr1, 8ul)));
+    mKeyBlocks.emplace(std::make_pair(AdvancedKeys::BtnText, std::make_unique<KeyBlock>(mParameterLines, ParameterLine::ID::BtnTextAdvClr, 8ul)));
     mKeyBlocks.at(AdvancedKeys::BtnText)->setPosition(getOrigin(ParameterLine::ID::BtnTextAdvSpace3));
 
-    mKeyBlocks.emplace(std::make_pair(AdvancedKeys::GfxBtn, std::make_unique<KeyBlock>(mParameterLines, ParameterLine::ID::BtnGfxBtnPos1, 3ul)));
+    mKeyBlocks.emplace(std::make_pair(AdvancedKeys::GfxBtn, std::make_unique<KeyBlock>(mParameterLines, ParameterLine::ID::BtnGfxBtnPos, 3ul)));
     mKeyBlocks.at(AdvancedKeys::GfxBtn)->setPosition(getOrigin(ParameterLine::ID::BtnGfxSpace));
 
-    mKeyBlocks.emplace(std::make_pair(AdvancedKeys::KeyPressVis, std::make_unique<KeyBlock>(mParameterLines, ParameterLine::ID::KeyPressVisAdvModeSpeed1, 7ul)));
+    mKeyBlocks.emplace(std::make_pair(AdvancedKeys::KeyPressVis, std::make_unique<KeyBlock>(mParameterLines, ParameterLine::ID::KeyPressVisAdvModeSpeed, 7ul)));
     mKeyBlocks.at(AdvancedKeys::KeyPressVis)->setPosition(getOrigin(ParameterLine::ID::KeyPressVisAdvModeSpace));
 
     buildTabAdv(*mKeyBlocks.at(AdvancedKeys::StatText), sf::Vector2i(0, 0), "KPS Text", sf::Vector2f(255.f, 20.f));
@@ -568,13 +568,13 @@ void Menu::buildParametersMap()
     for (auto i = 0ul; i < GfxStatisticsLine::StatisticsIdCounter; ++i)
     {
         const auto parms = 7ul;
-        const auto strPos = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::StatTextAdvPos1) + i * parms);
-        const auto valPos = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::StatTextAdvValPos1) + i * parms);
-        const auto cenOrig = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::StatTextAdvCenterOrigin1) + i * parms);
-        const auto clr = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::StatTextAdvClr1) + i * parms);
-        const auto chSz = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::StatTextAdvChSz1) + i * parms);
-        const auto bold = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::StatTextAdvBold1) + i * parms);
-        const auto italic = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::StatTextAdvItal1) + i * parms);
+        const auto strPos = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::StatTextAdvPos) + i * parms);
+        const auto valPos = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::StatTextAdvValPos) + i * parms);
+        const auto cenOrig = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::StatTextAdvCenterOrigin) + i * parms);
+        const auto clr = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::StatTextAdvClr) + i * parms);
+        const auto chSz = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::StatTextAdvChSz) + i * parms);
+        const auto bold = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::StatTextAdvBold) + i * parms);
+        const auto italic = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::StatTextAdvItal) + i * parms);
         const auto str = std::string(i == 0ul ? "KPS" : i == 1ul ? "Total" : "BPM");
 
         mParameters.emplace(std::make_pair(strPos,                                        new LogicalParameter(LogicalParameter::Type::VectorF,       &Settings::StatisticsTextAdvPosition[i],                str + " text position offset", "0,0", -10000, 10000)));
@@ -616,10 +616,10 @@ void Menu::buildParametersMap()
     for (auto i = 0ul; i < Settings::SupportedAdvancedKeysNumber; ++i)
     {
         const auto parms = 4ul;
-        const auto vis = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvVisPosition1) + i * parms);
-        const auto tot = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvTotPosition1) + i * parms);
-        const auto kps = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvKPSPosition1) + i * parms);
-        const auto bpm = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvBPMPosition1) + i * parms);
+        const auto vis = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvVisPosition) + i * parms);
+        const auto tot = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvTotPosition) + i * parms);
+        const auto kps = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvKPSPosition) + i * parms);
+        const auto bpm = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvBPMPosition) + i * parms);
         const auto iStr = std::to_string(i + 1);
 
         mParameters.emplace(std::make_pair(vis,                                           new LogicalParameter(LogicalParameter::Type::VectorF,       &Settings::ButtonTextAdvVisualKeysTextPosition[i],       iStr + ". Visual key text position offset", "0,0", -10000, 10000)));
@@ -632,14 +632,14 @@ void Menu::buildParametersMap()
     for (auto i = 0ul; i < Settings::SupportedAdvancedKeysNumber; ++i)
     {
         const auto parms = 8ul;
-        const auto clr = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvClr1) + i * parms);
-        const auto chSz = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvChSz1) + i * parms);
-        const auto outThck = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvOutThck1) + i * parms);
-        const auto outClr = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvOutClr1) + i * parms);
-        const auto pos = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvPosition1) + i * parms);
-        const auto bounds = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvBounds1) + i * parms);
-        const auto bold = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvBold1) + i * parms);
-        const auto ital = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvItal1) + i * parms);
+        const auto clr = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvClr) + i * parms);
+        const auto chSz = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvChSz) + i * parms);
+        const auto outThck = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvOutThck) + i * parms);
+        const auto outClr = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvOutClr) + i * parms);
+        const auto pos = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvPosition) + i * parms);
+        const auto bounds = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvBounds) + i * parms);
+        const auto bold = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvBold) + i * parms);
+        const auto ital = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnTextAdvItal) + i * parms);
         const auto iStr = std::to_string(i + 1);
 
         mParameters.emplace(std::make_pair(clr,                                           new LogicalParameter(LogicalParameter::Type::Color,         &Settings::ButtonTextAdvColor[i],                       iStr + ". Text color", "255,255,255,255")));
@@ -663,9 +663,9 @@ void Menu::buildParametersMap()
     for (auto i = 0ul; i < Settings::SupportedAdvancedKeysNumber; ++i)
     {
         const auto parms = 3ul;
-        const auto pos = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnGfxBtnPos1) + i * parms);
-        const auto sz = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnGfxSz1) + i * parms);
-        const auto clr = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnGfxClr1) + i * parms);
+        const auto pos = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnGfxBtnPos) + i * parms);
+        const auto sz = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnGfxSz) + i * parms);
+        const auto clr = static_cast<LogicalParameter::ID>(static_cast<size_t>(LogicalParameter::ID::BtnGfxClr) + i * parms);
         const auto iStr = std::to_string(i + 1);
 
         mParameters.emplace(std::make_pair(pos,                                           new LogicalParameter(LogicalParameter::Type::VectorF,       &Settings::GfxButtonsBtnPositions[i],                   iStr + ". Position offset", "0,0", -10000, 10000)));
@@ -719,13 +719,13 @@ void Menu::buildParametersMap()
     for (auto i = 0lu; i < Settings::SupportedAdvancedKeysNumber; ++i)
     {
         const auto parms = 7ul;
-        const auto speed =             LogicalParameter::ID(unsigned(LogicalParameter::ID::KeyPressVisAdvModeSpeed1) + i * parms);
-        const auto rot =               LogicalParameter::ID(unsigned(LogicalParameter::ID::KeyPressVisAdvModeRotation1) + i * parms);
-        const auto len =               LogicalParameter::ID(unsigned(LogicalParameter::ID::KeyPressVisAdvModeFadeLineLen1) + i * parms);
-        const auto orig =              LogicalParameter::ID(unsigned(LogicalParameter::ID::KeyPressVisAdvModeOrig1) + i * parms);
-        const auto clr =               LogicalParameter::ID(unsigned(LogicalParameter::ID::KeyPressVisAdvModeColor1) + i * parms);
-        const auto wScale =            LogicalParameter::ID(unsigned(LogicalParameter::ID::KeyPressVisAdvModeWidthScale1) + i * parms);
-        const auto fixHeight =         LogicalParameter::ID(unsigned(LogicalParameter::ID::KeyPressVisAdvModeFixedHeight1) + i * parms);
+        const auto speed =             LogicalParameter::ID(unsigned(LogicalParameter::ID::KeyPressVisAdvModeSpeed) + i * parms);
+        const auto rot =               LogicalParameter::ID(unsigned(LogicalParameter::ID::KeyPressVisAdvModeRotation) + i * parms);
+        const auto len =               LogicalParameter::ID(unsigned(LogicalParameter::ID::KeyPressVisAdvModeFadeLineLen) + i * parms);
+        const auto orig =              LogicalParameter::ID(unsigned(LogicalParameter::ID::KeyPressVisAdvModeOrig) + i * parms);
+        const auto clr =               LogicalParameter::ID(unsigned(LogicalParameter::ID::KeyPressVisAdvModeColor) + i * parms);
+        const auto wScale =            LogicalParameter::ID(unsigned(LogicalParameter::ID::KeyPressVisAdvModeWidthScale) + i * parms);
+        const auto fixHeight =         LogicalParameter::ID(unsigned(LogicalParameter::ID::KeyPressVisAdvModeFixedHeight) + i * parms);
         const auto iStr = std::to_string(i + 1);
 
         mParameters.emplace(std::make_pair(speed,                                         new LogicalParameter(LogicalParameter::Type::Float,         &Settings::KeyPressVisAdvSpeed[i],                      iStr + ". Speed", "40", 0, 5000)));

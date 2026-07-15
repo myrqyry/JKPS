@@ -409,42 +409,42 @@ void Application::resetAssets()
 void Application::loadTextures()
 {
     if (!mTextures.loadFromFile(Textures::Button, Settings::GfxButtonTexturePath))
-        mTextures.loadFromMemory(Textures::Button, Settings::DefaultButtonTexture, 2700);
+        mTextures.loadFromMemory(Textures::Button, Settings::DefaultButtonTexture, ButtonTextureSize);
 
     if (!mTextures.loadFromFile(Textures::Animation, Settings::AnimationTexturePath))
-        mTextures.loadFromMemory(Textures::Animation, Settings::DefaultAnimationTexture, 15800);
+        mTextures.loadFromMemory(Textures::Animation, Settings::DefaultAnimationTexture, AnimationTextureSize);
 
     // mTextures.loadFromMemory(Textures::KeyPressVis, Settings::KeyPressVisTexture, 4200);
 
     Settings::isGreenscreenSet = Settings::BackgroundTexturePath == "GreenscreenBG.png";
     if (Settings::isGreenscreenSet)
-        mTextures.loadFromMemory(Textures::Background, Settings::DefaultGreenscreenBackgroundTexture, 596);
+        mTextures.loadFromMemory(Textures::Background, Settings::DefaultGreenscreenBackgroundTexture, GreenscreenTextureSize);
     else
     {
         if (!mTextures.loadFromFile(Textures::Background, Settings::BackgroundTexturePath))
-            mTextures.loadFromMemory(Textures::Background, Settings::DefaultBackgroundTexture, 2700);
+            mTextures.loadFromMemory(Textures::Background, Settings::DefaultBackgroundTexture, BackgroundTextureSize);
     }
 }
 
 void Application::loadFonts()
 {
     if (!mFonts.loadFromFile(Fonts::ButtonValue, Settings::ButtonTextFontPath))
-        mFonts.loadFromMemory(Fonts::ButtonValue, Settings::KeyCountersDefaultFont, 581700);
+        mFonts.loadFromMemory(Fonts::ButtonValue, Settings::KeyCountersDefaultFont, KPSWindowDefaultFontSize);
 
     if (!mFonts.loadFromFile(Fonts::Statistics, Settings::StatisticsTextFontPath))
-        mFonts.loadFromMemory(Fonts::Statistics, Settings::StatisticsDefaultFont, 581700);
+        mFonts.loadFromMemory(Fonts::Statistics, Settings::StatisticsDefaultFont, KPSWindowDefaultFontSize);
 
     if (!mFonts.loadFromFile(Fonts::KPSText, Settings::KPSWindowTextFontPath))
-        mFonts.loadFromMemory(Fonts::KPSText, Settings::DefaultKPSWindowFont, 459300);
+        mFonts.loadFromMemory(Fonts::KPSText, Settings::DefaultKPSWindowFont, KPSWindowDefaultFontSize);
 
     if (!mFonts.loadFromFile(Fonts::KPSNumber, Settings::KPSWindowNumberFontPath))
-        mFonts.loadFromMemory(Fonts::KPSNumber, Settings::DefaultKPSWindowFont, 459300);
+        mFonts.loadFromMemory(Fonts::KPSNumber, Settings::DefaultKPSWindowFont, KPSWindowDefaultFontSize);
 }
 
 void Application::loadIcon()
 {
     sf::Image icon;
-    icon.loadFromMemory(IconTexture, 53200);
+    icon.loadFromMemory(IconTexture, IconTextureSize);
     mWindow.setIcon(256, 256, icon.getPixelsPtr());
 }
 

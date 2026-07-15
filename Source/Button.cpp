@@ -147,15 +147,15 @@ bool Button::parameterIdMatches(LogicalParameter::ID id)
     const auto idU = static_cast<unsigned>(id);
     
     const auto textSepValAdvParms = 4ul;
-    const auto firstTextSepValAdvPar = static_cast<unsigned>(LogicalParameter::ID::BtnTextAdvVisPosition1);
+    const auto firstTextSepValAdvPar = static_cast<unsigned>(LogicalParameter::ID::BtnTextAdvVisPosition);
     const auto lastTextSepValAdvPar = firstTextSepValAdvPar + textSepValAdvParms * Settings::SupportedAdvancedKeysNumber - 1u;
 
     const auto textAdvParms = 8ul;
-    const auto firstTextAdvPar = static_cast<unsigned>(LogicalParameter::ID::BtnTextAdvClr1);
+    const auto firstTextAdvPar = static_cast<unsigned>(LogicalParameter::ID::BtnTextAdvClr);
     const auto lastTextAdvPar = firstTextAdvPar + textAdvParms * Settings::SupportedAdvancedKeysNumber - 1u;
 
     const auto gfxBtnAdvParms = 3ul;
-    const auto firstGfxBtnAdvPar = static_cast<unsigned>(LogicalParameter::ID::BtnGfxBtnPos1);
+    const auto firstGfxBtnAdvPar = static_cast<unsigned>(LogicalParameter::ID::BtnGfxBtnPos);
     const auto lastGfxBtnAdvPar = firstGfxBtnAdvPar + gfxBtnAdvParms * Settings::SupportedAdvancedKeysNumber - 1u;
 
     return 

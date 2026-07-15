@@ -21,7 +21,7 @@ GfxButtonSelector::GfxButtonSelector()
 : mWindowSize(300, 200)
 , mLogKey(nullptr)
 {
-    if (!mFont.loadFromMemory(RobotoMono, 1100000))
+    if (!mFont.loadFromMemory(RobotoMono, RobotoMonoSize))
         throw std::runtime_error("KeySelector::KeySelector - Failed to load default font");
 
     auto realKeyGfx = std::make_unique<GfxParameter>(nullptr, "Key", 0, sf::Vector2f(150, 25));
