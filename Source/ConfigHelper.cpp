@@ -129,10 +129,10 @@ void readParameters(Menu::ParametersContainer &parameters, const std::vector<std
     auto it = collectionNames.begin();
     for (auto &[id, par] : parameters)
     {
+        readParameter(*par, *it);
+
         if (isNextCollection(id))
             ++it;
-
-        readParameter(*par, *it);
     }
 }
 

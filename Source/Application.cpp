@@ -432,10 +432,10 @@ void Application::loadTextures()
 void Application::loadFonts()
 {
     if (!mFonts.loadFromFile(Fonts::ButtonValue, Settings::ButtonTextFontPath))
-        mFonts.loadFromMemory(Fonts::ButtonValue, Settings::KeyCountersDefaultFont, KPSWindowDefaultFontSize);
+        mFonts.loadFromMemory(Fonts::ButtonValue, Settings::KeyCountersDefaultFont, MainProgramFontSize);
 
     if (!mFonts.loadFromFile(Fonts::Statistics, Settings::StatisticsTextFontPath))
-        mFonts.loadFromMemory(Fonts::Statistics, Settings::StatisticsDefaultFont, KPSWindowDefaultFontSize);
+        mFonts.loadFromMemory(Fonts::Statistics, Settings::StatisticsDefaultFont, MainProgramFontSize);
 
     if (!mFonts.loadFromFile(Fonts::KPSText, Settings::KPSWindowTextFontPath))
         mFonts.loadFromMemory(Fonts::KPSText, Settings::DefaultKPSWindowFont, KPSWindowDefaultFontSize);
