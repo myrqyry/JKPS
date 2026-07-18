@@ -33,11 +33,8 @@ class Button : public LogButton, public GfxButton
 
     private:
         static unsigned mSize;
-        
-        const TextureHolder &mTextures;
-        const FontHolder &mFonts;
 
-        const unsigned mBtnIdx;
+        using GfxButton::mBtnIdx;
 
         // Layout caching: text bounds/origins are only recomputed when the
         // displayed strings, character size, or key state actually change,

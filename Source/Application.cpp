@@ -332,6 +332,7 @@ void Application::render()
 void Application::unloadChangesQueue()
 {
     auto &queue = mMenu.getChangedParametersQueue();
+    bool needsRescale = false;
     while (!queue.isEmpty())
     {
         auto pair = queue.pop();
@@ -376,8 +377,10 @@ void Application::unloadChangesQueue()
 			mWindow.setFramerateLimit(getApplicationUpdateFrequency());
 		}
 
-        mBackground->rescale();
+        needsRescale = true;
     }
+    if (needsRescale)
+        mBackground->rescale();
 }
 
 void Application::resetAssets()

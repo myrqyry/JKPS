@@ -9,3 +9,6 @@ JKPS.exe
 JKPS.cfg
 SESSION-STATE.md
 build_log.txt
+
+# Superpowers docs are local working notes
+docs/superpowers/

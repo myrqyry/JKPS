@@ -11,9 +11,13 @@
 #include <SFML/Graphics/VertexArray.hpp>
 #include <SFML/Graphics/ConvexShape.hpp>
 
-#include <cmath>
 #include <algorithm>
 #include <cmath>
+#include <numbers>
+
+
+constexpr float Pi = std::numbers::pi_v<float>;
+static constexpr float LegacyFrameRate = 60.f;
 
 
 bool GfxButton::mShowBounds(false);
@@ -22,11 +26,11 @@ int GfxButton::mSelectedKeyBounds(-1);
 GfxButton::GfxButton(const unsigned idx, const TextureHolder &textureHolder, const FontHolder &fontHolder)
 : mTextures(textureHolder)
 , mFonts(fontHolder)
+, mBtnIdx(idx)
+, mButtonsHeightOffset(0.f)
 // , mEmitter(textureHolder.get(Textures::KeyPressVis))
 , mEmitter(idx)
 , mLastKeyState(false)
-, mButtonsHeightOffset(0.f)
-, mBtnIdx(idx)
 {
     for (unsigned i = 0; i < SpriteIdCounter; ++i)
     {
@@ -543,7 +547,7 @@ float GfxButton::RectEmitter::getConstantSpeedScale()
 	// Now that rendering frame rate is dynamic, the "speed" property defines
 	// pixels per second, not pixels per frame; to keep it compatible with older versions
 	// in terms of speed, convert the px/f speed to px/s
-	return 60.f;
+	return LegacyFrameRate;
 }
 
 void GfxButton::RectEmitter::create(float deltaSeconds, sf::Vector2f buttonSize)
@@ -621,20 +625,47 @@ sf::Color GfxButton::RectEmitter::getVertexColor(const sf::VertexArray &vertexAr
 
 void GfxButton::drawVectorShape(sf::RenderTarget &target, sf::RenderStates states, int shape, sf::Vector2f position, sf::Vector2f size, sf::Color fillColor, sf::Color outlineColor) const
 {
-    float outlineThickness = 3.f;
-    
-    sf::Vector2f adjPos = position + sf::Vector2f(outlineThickness / 2.f, outlineThickness / 2.f);
-    sf::Vector2f adjSize = size - sf::Vector2f(outlineThickness, outlineThickness);
+    const float outlineThickness = 3.f;
+    const sf::Vector2f adjPos = position + sf::Vector2f(outlineThickness / 2.f, outlineThickness / 2.f);
+    const sf::Vector2f adjSize = size - sf::Vector2f(outlineThickness, outlineThickness);
+
+    // Cache hit: geometry unchanged, just update colors and draw
+    if (mCachedShapeType == shape && mCachedShapeSize == adjSize && mCachedShapePos == adjPos)
+    {
+        if (shape == 5)
+        {
+            for (std::size_t i = 0; i < 11; ++i)
+                mCachedStarFill[i].color = fillColor;
+            for (std::size_t i = 0; i < 11; ++i)
+                mCachedStarOutline[i].color = outlineColor;
+            target.draw(mCachedStarFill, states);
+            target.draw(mCachedStarOutline, states);
+        }
+        else if (mCachedShape)
+        {
+            mCachedShape->setFillColor(fillColor);
+            mCachedShape->setOutlineColor(outlineColor);
+            target.draw(*mCachedShape, states);
+        }
+        return;
+    }
+
+    // Cache miss: rebuild geometry
+    mCachedShape.reset();
+    mCachedShapeType = shape;
+    mCachedShapeSize = adjSize;
+    mCachedShapePos = adjPos;
 
     if (shape == 1) // Rounded (drawn as Rectangle with outline for JKPS style)
     {
-        sf::RectangleShape rect;
-        rect.setPosition(adjPos);
-        rect.setSize(adjSize);
-        rect.setFillColor(fillColor);
-        rect.setOutlineThickness(outlineThickness);
-        rect.setOutlineColor(outlineColor);
-        target.draw(rect, states);
+        auto rect = std::make_unique<sf::RectangleShape>();
+        rect->setPosition(adjPos);
+        rect->setSize(adjSize);
+        rect->setFillColor(fillColor);
+        rect->setOutlineThickness(outlineThickness);
+        rect->setOutlineColor(outlineColor);
+        target.draw(*rect, states);
+        mCachedShape = std::move(rect);
     }
     else if (shape == 2) // Pill
     {
@@ -644,59 +675,62 @@ void GfxButton::drawVectorShape(sf::RenderTarget &target, sf::RenderStates state
         const float centerY = adjPos.y + radius;
 
         const int arcSegs = 8;
-        sf::ConvexShape pill;
-        pill.setPointCount(2u + 2u * static_cast<std::size_t>(arcSegs - 1) + 2u);
+        auto pill = std::make_unique<sf::ConvexShape>();
+        pill->setPointCount(2u + 2u * static_cast<std::size_t>(arcSegs - 1) + 2u);
         std::size_t p = 0;
 
         // Top straight edge
-        pill.setPoint(p++, sf::Vector2f(leftCenterX, adjPos.y));
-        pill.setPoint(p++, sf::Vector2f(rightCenterX, adjPos.y));
+        pill->setPoint(p++, sf::Vector2f(leftCenterX, adjPos.y));
+        pill->setPoint(p++, sf::Vector2f(rightCenterX, adjPos.y));
 
         // Right arc (top -> bottom)
         for (int i = 1; i < arcSegs; ++i)
         {
-            const float a = -3.14159265f / 2.f + (3.14159265f * static_cast<float>(i) / static_cast<float>(arcSegs));
-            pill.setPoint(p++, sf::Vector2f(rightCenterX + radius * std::cos(a), centerY + radius * std::sin(a)));
+            const float a = -Pi / 2.f + (Pi * static_cast<float>(i) / static_cast<float>(arcSegs));
+            pill->setPoint(p++, sf::Vector2f(rightCenterX + radius * std::cos(a), centerY + radius * std::sin(a)));
         }
 
         // Bottom straight edge (right -> left)
-        pill.setPoint(p++, sf::Vector2f(rightCenterX, adjPos.y + adjSize.y));
-        pill.setPoint(p++, sf::Vector2f(leftCenterX, adjPos.y + adjSize.y));
+        pill->setPoint(p++, sf::Vector2f(rightCenterX, adjPos.y + adjSize.y));
+        pill->setPoint(p++, sf::Vector2f(leftCenterX, adjPos.y + adjSize.y));
 
         // Left arc (bottom -> top)
         for (int i = 1; i < arcSegs; ++i)
         {
-            const float a = 3.14159265f / 2.f + (3.14159265f * static_cast<float>(i) / static_cast<float>(arcSegs));
-            pill.setPoint(p++, sf::Vector2f(leftCenterX + radius * std::cos(a), centerY + radius * std::sin(a)));
+            const float a = Pi / 2.f + (Pi * static_cast<float>(i) / static_cast<float>(arcSegs));
+            pill->setPoint(p++, sf::Vector2f(leftCenterX + radius * std::cos(a), centerY + radius * std::sin(a)));
         }
 
-        pill.setFillColor(fillColor);
-        pill.setOutlineThickness(outlineThickness);
-        pill.setOutlineColor(outlineColor);
-        target.draw(pill, states);
+        pill->setFillColor(fillColor);
+        pill->setOutlineThickness(outlineThickness);
+        pill->setOutlineColor(outlineColor);
+        target.draw(*pill, states);
+        mCachedShape = std::move(pill);
     }
     else if (shape == 3) // Circle
     {
         float radius = std::min(adjSize.x, adjSize.y) / 2.f;
-        sf::CircleShape circle(radius);
-        circle.setPosition(adjPos.x + adjSize.x / 2.f - radius, adjPos.y + adjSize.y / 2.f - radius);
-        circle.setFillColor(fillColor);
-        circle.setOutlineThickness(outlineThickness);
-        circle.setOutlineColor(outlineColor);
-        target.draw(circle, states);
+        auto circle = std::make_unique<sf::CircleShape>(radius);
+        circle->setPosition(adjPos.x + adjSize.x / 2.f - radius, adjPos.y + adjSize.y / 2.f - radius);
+        circle->setFillColor(fillColor);
+        circle->setOutlineThickness(outlineThickness);
+        circle->setOutlineColor(outlineColor);
+        target.draw(*circle, states);
+        mCachedShape = std::move(circle);
     }
     else if (shape == 4) // Diamond
     {
-        sf::ConvexShape diamond;
-        diamond.setPointCount(4);
-        diamond.setPoint(0, sf::Vector2f(adjPos.x + adjSize.x / 2.f, adjPos.y));
-        diamond.setPoint(1, sf::Vector2f(adjPos.x + adjSize.x, adjPos.y + adjSize.y / 2.f));
-        diamond.setPoint(2, sf::Vector2f(adjPos.x + adjSize.x / 2.f, adjPos.y + adjSize.y));
-        diamond.setPoint(3, sf::Vector2f(adjPos.x, adjPos.y + adjSize.y / 2.f));
-        diamond.setFillColor(fillColor);
-        diamond.setOutlineThickness(outlineThickness);
-        diamond.setOutlineColor(outlineColor);
-        target.draw(diamond, states);
+        auto diamond = std::make_unique<sf::ConvexShape>();
+        diamond->setPointCount(4);
+        diamond->setPoint(0, sf::Vector2f(adjPos.x + adjSize.x / 2.f, adjPos.y));
+        diamond->setPoint(1, sf::Vector2f(adjPos.x + adjSize.x, adjPos.y + adjSize.y / 2.f));
+        diamond->setPoint(2, sf::Vector2f(adjPos.x + adjSize.x / 2.f, adjPos.y + adjSize.y));
+        diamond->setPoint(3, sf::Vector2f(adjPos.x, adjPos.y + adjSize.y / 2.f));
+        diamond->setFillColor(fillColor);
+        diamond->setOutlineThickness(outlineThickness);
+        diamond->setOutlineColor(outlineColor);
+        target.draw(*diamond, states);
+        mCachedShape = std::move(diamond);
     }
     else if (shape == 5) // Star
     {
@@ -704,85 +738,89 @@ void GfxButton::drawVectorShape(sf::RenderTarget &target, sf::RenderStates state
         float cy = adjPos.y + adjSize.y / 2.f;
         float outerR = std::min(adjSize.x, adjSize.y) / 2.f;
         float innerR = outerR * 0.4f;
-        sf::VertexArray star(sf::TriangleFan, 11);
-        star[0].position = {cx, cy};
-        star[0].color = fillColor;
+
+        mCachedStarFill.resize(11);
+        mCachedStarFill[0].position = {cx, cy};
+        mCachedStarFill[0].color = fillColor;
         for (int i = 0; i < 5; ++i)
         {
-            float angle = -3.14159f / 2.f + static_cast<float>(i) * 2.f * 3.14159f / 5.f;
+            float angle = -Pi / 2.f + static_cast<float>(i) * 2.f * Pi / 5.f;
             const auto outerIdx = static_cast<std::size_t>(i * 2 + 1);
             const auto innerIdx = static_cast<std::size_t>(i * 2 + 2);
-            star[outerIdx].position = {cx + outerR * std::cos(angle), cy + outerR * std::sin(angle)};
-            star[outerIdx].color = fillColor;
-            float innerAngle = angle + 3.14159f / 5.f;
-            star[innerIdx].position = {cx + innerR * std::cos(innerAngle), cy + innerR * std::sin(innerAngle)};
-            star[innerIdx].color = fillColor;
+            mCachedStarFill[outerIdx].position = {cx + outerR * std::cos(angle), cy + outerR * std::sin(angle)};
+            mCachedStarFill[outerIdx].color = fillColor;
+            float innerAngle = angle + Pi / 5.f;
+            mCachedStarFill[innerIdx].position = {cx + innerR * std::cos(innerAngle), cy + innerR * std::sin(innerAngle)};
+            mCachedStarFill[innerIdx].color = fillColor;
         }
-        target.draw(star, states);
+        target.draw(mCachedStarFill, states);
 
-        sf::VertexArray outline(sf::LineStrip, 11);
+        mCachedStarOutline.resize(11);
         for (int i = 0; i < 5; ++i)
         {
-            float angle = -3.14159f / 2.f + static_cast<float>(i) * 2.f * 3.14159f / 5.f;
+            float angle = -Pi / 2.f + static_cast<float>(i) * 2.f * Pi / 5.f;
             const auto outerIdx = static_cast<std::size_t>(i * 2);
             const auto innerIdx = static_cast<std::size_t>(i * 2 + 1);
-            outline[outerIdx].position = {cx + outerR * std::cos(angle), cy + outerR * std::sin(angle)};
-            outline[outerIdx].color = outlineColor;
-            float innerAngle = angle + 3.14159f / 5.f;
-            outline[innerIdx].position = {cx + innerR * std::cos(innerAngle), cy + innerR * std::sin(innerAngle)};
-            outline[innerIdx].color = outlineColor;
+            mCachedStarOutline[outerIdx].position = {cx + outerR * std::cos(angle), cy + outerR * std::sin(angle)};
+            mCachedStarOutline[outerIdx].color = outlineColor;
+            float innerAngle = angle + Pi / 5.f;
+            mCachedStarOutline[innerIdx].position = {cx + innerR * std::cos(innerAngle), cy + innerR * std::sin(innerAngle)};
+            mCachedStarOutline[innerIdx].color = outlineColor;
         }
-        outline[10].position = outline[0].position;
-        outline[10].color = outlineColor;
-        target.draw(outline, states);
+        mCachedStarOutline[10].position = mCachedStarOutline[0].position;
+        mCachedStarOutline[10].color = outlineColor;
+        target.draw(mCachedStarOutline, states);
     }
     else if (shape == 6) // Hexagon
     {
-        sf::ConvexShape hex;
-        hex.setPointCount(6);
+        auto hex = std::make_unique<sf::ConvexShape>();
+        hex->setPointCount(6);
         float cx = adjPos.x + adjSize.x / 2.f;
         float cy = adjPos.y + adjSize.y / 2.f;
         float radius = std::min(adjSize.x, adjSize.y) / 2.f;
         for (int i = 0; i < 6; ++i)
         {
-            float angle = static_cast<float>(i) * 3.14159f / 3.f;
-            hex.setPoint(static_cast<std::size_t>(i), sf::Vector2f(cx + radius * std::cos(angle), cy + radius * std::sin(angle)));
+            float angle = static_cast<float>(i) * Pi / 3.f;
+            hex->setPoint(static_cast<std::size_t>(i), sf::Vector2f(cx + radius * std::cos(angle), cy + radius * std::sin(angle)));
         }
-        hex.setFillColor(fillColor);
-        hex.setOutlineThickness(outlineThickness);
-        hex.setOutlineColor(outlineColor);
-        target.draw(hex, states);
+        hex->setFillColor(fillColor);
+        hex->setOutlineThickness(outlineThickness);
+        hex->setOutlineColor(outlineColor);
+        target.draw(*hex, states);
+        mCachedShape = std::move(hex);
     }
     else if (shape == 7) // Triangle
     {
-        sf::ConvexShape triangle;
-        triangle.setPointCount(3);
+        auto triangle = std::make_unique<sf::ConvexShape>();
+        triangle->setPointCount(3);
         float cx = adjPos.x + adjSize.x / 2.f;
         float cy = adjPos.y + adjSize.y / 2.f;
         float radius = std::min(adjSize.x, adjSize.y) / 2.f;
-        triangle.setPoint(0, sf::Vector2f(cx, cy - radius));
-        triangle.setPoint(1, sf::Vector2f(cx + radius * 0.866f, cy + radius * 0.5f));
-        triangle.setPoint(2, sf::Vector2f(cx - radius * 0.866f, cy + radius * 0.5f));
-        triangle.setFillColor(fillColor);
-        triangle.setOutlineThickness(outlineThickness);
-        triangle.setOutlineColor(outlineColor);
-        target.draw(triangle, states);
+        triangle->setPoint(0, sf::Vector2f(cx, cy - radius));
+        triangle->setPoint(1, sf::Vector2f(cx + radius * 0.866f, cy + radius * 0.5f));
+        triangle->setPoint(2, sf::Vector2f(cx - radius * 0.866f, cy + radius * 0.5f));
+        triangle->setFillColor(fillColor);
+        triangle->setOutlineThickness(outlineThickness);
+        triangle->setOutlineColor(outlineColor);
+        target.draw(*triangle, states);
+        mCachedShape = std::move(triangle);
     }
     else if (shape == 8) // Octagon
     {
-        sf::ConvexShape octagon;
-        octagon.setPointCount(8);
+        auto octagon = std::make_unique<sf::ConvexShape>();
+        octagon->setPointCount(8);
         float cx = adjPos.x + adjSize.x / 2.f;
         float cy = adjPos.y + adjSize.y / 2.f;
         float radius = std::min(adjSize.x, adjSize.y) / 2.f;
         for (int i = 0; i < 8; ++i)
         {
-            float angle = static_cast<float>(i) * 3.14159f / 4.f + 3.14159f / 8.f;
-            octagon.setPoint(static_cast<std::size_t>(i), sf::Vector2f(cx + radius * std::cos(angle), cy + radius * std::sin(angle)));
+            float angle = static_cast<float>(i) * Pi / 4.f + Pi / 8.f;
+            octagon->setPoint(static_cast<std::size_t>(i), sf::Vector2f(cx + radius * std::cos(angle), cy + radius * std::sin(angle)));
         }
-        octagon.setFillColor(fillColor);
-        octagon.setOutlineThickness(outlineThickness);
-        octagon.setOutlineColor(outlineColor);
-        target.draw(octagon, states);
+        octagon->setFillColor(fillColor);
+        octagon->setOutlineThickness(outlineThickness);
+        octagon->setOutlineColor(outlineColor);
+        target.draw(*octagon, states);
+        mCachedShape = std::move(octagon);
     }
 }

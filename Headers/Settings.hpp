@@ -234,28 +234,79 @@ namespace Settings
     extern Container<unsigned> KeysTotal;
 
     // [UI design tokens]
-    // A small, shared vocabulary for the visual system. These are the canonical
-    // knobs the redesign builds on; the many fine-grained settings above remain
-    // for backwards compatibility and advanced per-element overrides. New layout
-    // code should prefer these tokens so styling stays coherent across the
-    // overlay and the secondary windows.
+    // Material Design 3 Expressive semantic palette and spacing system.
+    // Inspired by the M3 dark scheme adapted for JKPS's blue identity.
+    // Layout code should prefer these tokens so styling stays coherent.
     namespace UiTokens
     {
-        extern float BaseSpacing;
-        extern unsigned PrimaryTextSize;
-        extern unsigned SecondaryTextSize;
-        extern sf::Color SurfaceColor;
-        extern sf::Color AccentColor;
-        extern sf::Color BorderColor;
+        // --- Surface colors (M3 dark elevation system) ---
+        extern sf::Color Surface;
+        extern sf::Color SurfaceDim;
+        extern sf::Color SurfaceBright;
+        extern sf::Color SurfaceContainerLowest;
+        extern sf::Color SurfaceContainerLow;
+        extern sf::Color SurfaceContainer;
+        extern sf::Color SurfaceContainerHigh;
+        extern sf::Color SurfaceContainerHighest;
+        extern sf::Color OnSurface;
+        extern sf::Color OnSurfaceVariant;
 
-        extern sf::Color CustomizationSurface;
-        extern sf::Color CustomizationSurfaceVariant;
-        extern sf::Color CustomizationAccent;
-        extern sf::Color CustomizationOutline;
-        extern sf::Color CustomizationFocus;
-        extern unsigned CustomizationHeaderTextSize;
-        extern unsigned CustomizationBodyTextSize;
-        extern float CustomizationSpacing;
-        extern float CustomizationRadius;
+        // --- Primary colors (blue accent) ---
+        extern sf::Color Primary;
+        extern sf::Color OnPrimary;
+        extern sf::Color PrimaryContainer;
+        extern sf::Color OnPrimaryContainer;
+
+        // --- Secondary colors (muted blue) ---
+        extern sf::Color Secondary;
+        extern sf::Color OnSecondary;
+
+        // --- Outline colors ---
+        extern sf::Color Outline;
+        extern sf::Color OutlineVariant;
+
+        // --- Error colors ---
+        extern sf::Color Error;
+        extern sf::Color OnError;
+
+        // --- Focus indicator ---
+        extern sf::Color Focus;
+
+        // --- Typography (px) ---
+        extern unsigned TextSizeHeader;
+        extern unsigned TextSizeBody;
+        extern unsigned TextSizeSmall;
+
+        // --- Spacing (4px base unit) ---
+        extern float SpacingXs;
+        extern float SpacingSm;
+        extern float SpacingMd;
+        extern float SpacingLg;
+        extern float SpacingXl;
+
+        // --- Corner radius ---
+        extern float RadiusSm;
+        extern float RadiusMd;
+        extern float RadiusLg;
+        extern float RadiusXl;
+
+        // --- Backward-compatible aliases ---
+        // Legacy names redirect to equivalent M3E tokens so existing
+        // code compiles without changes while the codebase migrates.
+        inline float      &BaseSpacing                     = SpacingMd;
+        inline unsigned   &PrimaryTextSize                 = TextSizeBody;
+        inline unsigned   &SecondaryTextSize               = TextSizeSmall;
+        inline sf::Color  &SurfaceColor                    = Surface;
+        inline sf::Color  &AccentColor                     = Primary;
+        inline sf::Color  &BorderColor                     = OutlineVariant;
+        inline sf::Color  &CustomizationSurface            = Surface;
+        inline sf::Color  &CustomizationSurfaceVariant     = SurfaceContainer;
+        inline sf::Color  &CustomizationAccent             = Primary;
+        inline sf::Color  &CustomizationOutline            = OutlineVariant;
+        inline sf::Color  &CustomizationFocus              = Focus;
+        inline unsigned   &CustomizationHeaderTextSize     = TextSizeHeader;
+        inline unsigned   &CustomizationBodyTextSize       = TextSizeBody;
+        inline float      &CustomizationSpacing            = SpacingMd;
+        inline float      &CustomizationRadius             = RadiusMd;
     }
 }

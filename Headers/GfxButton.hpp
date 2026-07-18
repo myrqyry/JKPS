@@ -80,6 +80,12 @@ class GfxButton : public sf::Drawable, public sf::Transformable
         std::array<std::unique_ptr<sf::Sprite>, SpriteID::SpriteIdCounter> mSprites;
         std::array<std::unique_ptr<sf::Text>, TextID::TextIdCounter> mTexts;
 
+        const TextureHolder &mTextures;
+        const FontHolder &mFonts;
+        const unsigned mBtnIdx;
+
+        float mButtonsHeightOffset;
+
 
     private:
         class RectEmitter : public sf::Drawable
@@ -125,17 +131,18 @@ class GfxButton : public sf::Drawable, public sf::Transformable
 
 
     private:
-        const TextureHolder &mTextures;
-        const FontHolder &mFonts;
         RectEmitter mEmitter;
         sf::RectangleShape mBounds;
         static int mSelectedKeyBounds;
 
+        mutable std::unique_ptr<sf::Shape> mCachedShape;
+        mutable sf::VertexArray mCachedStarFill{sf::TriangleFan, 11};
+        mutable sf::VertexArray mCachedStarOutline{sf::LineStrip, 11};
+        mutable int mCachedShapeType = -1;
+        mutable sf::Vector2f mCachedShapeSize;
+        mutable sf::Vector2f mCachedShapePos;
+
         bool mLastKeyState;
-
-        float mButtonsHeightOffset;
-
-        const unsigned mBtnIdx;
 
         static bool mShowBounds;
 };

@@ -48,7 +48,7 @@ ParameterLine::ParameterLine(
     mRectLine.setOutlineColor(Settings::UiTokens::CustomizationOutline);
     mParameterName.setString(parameter->mParName);
     mParameterName.setFont(fonts.get(Fonts::Parameter));
-    mParameterName.setFillColor(sf::Color::White);
+    mParameterName.setFillColor(Settings::UiTokens::OnSurface);
     setCharacterSize(20u);
 
     buildButtons(parameter->getValStr(), fonts, textures);
@@ -558,7 +558,7 @@ void ParameterLine::buildLimits(const FontHolder &fonts)
     {
         mLimits.setFont(fonts.get(Fonts::Parameter));
         mLimits.setCharacterSize(10u);
-        mLimits.setFillColor(sf::Color(200, 200, 200));
+        mLimits.setFillColor(Settings::UiTokens::OnSurfaceVariant);
         mLimits.setOrigin(mLimits.getLocalBounds().left, mLimits.getLocalBounds().top);
         mLimits.setPosition(mParameterName.getLocalBounds().left, mParameterName.getLocalBounds().top + 
             mParameterName.getLocalBounds().height + 4.f);

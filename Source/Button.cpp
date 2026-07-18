@@ -9,9 +9,6 @@ unsigned Button::mSize(0u);
 Button::Button(unsigned idx, LogKey &key, const TextureHolder &textureHolder, const FontHolder &fontHolder)
 : LogButton(idx, key)
 , GfxButton(idx, textureHolder, fontHolder)
-, mTextures(textureHolder)
-, mFonts(fontHolder)
-, mBtnIdx(idx)
 , mTextLayoutDirty(true)
 , mCachedCharSize(0u)
 {

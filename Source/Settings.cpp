@@ -205,24 +205,61 @@ float MaxKPS;
 unsigned Total;
 Container<unsigned> KeysTotal;
 
-// [UI design tokens]
+// [UI design tokens — Material Design 3 Expressive]
+// Dark semantic palette adapted for JKPS's blue identity.
+// Each surface layer sits one step higher in the elevation stack.
 namespace UiTokens
 {
-float BaseSpacing = 8.f;
-unsigned PrimaryTextSize = 18u;
-unsigned SecondaryTextSize = 14u;
-sf::Color SurfaceColor = sf::Color(30, 30, 30);
-sf::Color AccentColor = sf::Color(0, 180, 255);
-sf::Color BorderColor = sf::Color(60, 60, 60);
-sf::Color CustomizationSurface = sf::Color(28, 28, 32);
-sf::Color CustomizationSurfaceVariant = sf::Color(40, 40, 46);
-sf::Color CustomizationAccent = sf::Color(0, 180, 255);
-sf::Color CustomizationOutline = sf::Color(64, 64, 72);
-sf::Color CustomizationFocus = sf::Color(255, 196, 0);
-unsigned CustomizationHeaderTextSize = 22u;
-unsigned CustomizationBodyTextSize = 15u;
-float CustomizationSpacing = 10.f;
-float CustomizationRadius = 10.f;
+// --- Surface colors ---
+sf::Color Surface                 = sf::Color(18, 18, 22);
+sf::Color SurfaceDim              = sf::Color(15, 15, 19);
+sf::Color SurfaceBright           = sf::Color(48, 48, 54);
+sf::Color SurfaceContainerLowest  = sf::Color(12, 12, 16);
+sf::Color SurfaceContainerLow     = sf::Color(24, 24, 28);
+sf::Color SurfaceContainer        = sf::Color(32, 32, 38);
+sf::Color SurfaceContainerHigh    = sf::Color(40, 40, 46);
+sf::Color SurfaceContainerHighest = sf::Color(48, 48, 54);
+sf::Color OnSurface               = sf::Color(226, 226, 232);
+sf::Color OnSurfaceVariant        = sf::Color(194, 194, 200);
+
+// --- Primary (blue) ---
+sf::Color Primary                 = sf::Color(130, 200, 255);
+sf::Color OnPrimary               = sf::Color(0, 35, 65);
+sf::Color PrimaryContainer        = sf::Color(0, 75, 140);
+sf::Color OnPrimaryContainer      = sf::Color(200, 230, 255);
+
+// --- Secondary (muted blue) ---
+sf::Color Secondary               = sf::Color(160, 200, 220);
+sf::Color OnSecondary             = sf::Color(20, 32, 42);
+
+// --- Outlines ---
+sf::Color Outline                 = sf::Color(140, 140, 148);
+sf::Color OutlineVariant          = sf::Color(66, 66, 74);
+
+// --- Error ---
+sf::Color Error                   = sf::Color(255, 180, 160);
+sf::Color OnError                 = sf::Color(60, 15, 0);
+
+// --- Focus ---
+sf::Color Focus                   = sf::Color(255, 210, 0);
+
+// --- Typography ---
+unsigned TextSizeHeader           = 22u;
+unsigned TextSizeBody             = 15u;
+unsigned TextSizeSmall            = 12u;
+
+// --- Spacing (4 px base unit) ---
+float SpacingXs                   = 4.f;
+float SpacingSm                   = 8.f;
+float SpacingMd                   = 12.f;
+float SpacingLg                   = 16.f;
+float SpacingXl                   = 24.f;
+
+// --- Corner radius ---
+float RadiusSm                    = 8.f;
+float RadiusMd                    = 12.f;
+float RadiusLg                    = 16.f;
+float RadiusXl                    = 20.f;
 }
 
 } // !namespace Settings

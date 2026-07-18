@@ -30,7 +30,7 @@ GfxParameter::GfxParameter(const ParameterLine *parent, const std::string &str, 
 
     mValText.setFont(mFonts->get(Fonts::Value));
     mValText.setString(str);
-    mValText.setFillColor(sf::Color::White);
+    mValText.setFillColor(Settings::UiTokens::OnSurface);
     setupValPos();
 
     float distance = 80;
@@ -59,7 +59,7 @@ GfxParameter::GfxParameter(const std::string &str, sf::Vector2f rectSize)
     mValText.setFont(mFonts->get(Fonts::Value));
     mValText.setString(str);
     mValText.setCharacterSize(15);
-    mValText.setFillColor(sf::Color::White);
+    mValText.setFillColor(Settings::UiTokens::OnSurface);
 
     auto rect = mValText.getLocalBounds();
     mValText.setOrigin(

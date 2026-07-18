@@ -17,9 +17,9 @@
 Menu::Menu()
 : mScrollSpeed(40.f)
 , mSliderBar(sf::Vector2f(10.f, 200.f))
-, mSliderBarDefaultColor(sf::Color(103,103,103))
-, mSliderBarAimedColor(sf::Color(123,123,123))
-, mSliderBarPressedColor(sf::Color(161,161,161))
+, mSliderBarDefaultColor(Settings::UiTokens::OutlineVariant)
+, mSliderBarAimedColor(Settings::UiTokens::Outline)
+, mSliderBarPressedColor(Settings::UiTokens::Primary)
 , mSelectedTab(0u)
 , mSelectedAdvKeyPressVisKey(0u)
 {
@@ -466,9 +466,9 @@ void Menu::buildMenuTabs()
     addTab("Main info", tabSize);
 
     mTabsBackground.setSize(sf::Vector2f(tabSize.x + offset.x * 2.f, 700.f));
-    mTabsBackground.setFillColor(Settings::UiTokens::CustomizationSurfaceVariant);
+    mTabsBackground.setFillColor(Settings::UiTokens::SurfaceContainerLow);
     mTabsBackground.setOutlineThickness(1.f);
-    mTabsBackground.setOutlineColor(Settings::UiTokens::CustomizationOutline);
+    mTabsBackground.setOutlineColor(Settings::UiTokens::OutlineVariant);
 }
 
 void buildTab(Menu::KeyBlock &container, sf::Vector2i tabCoords, size_t key)

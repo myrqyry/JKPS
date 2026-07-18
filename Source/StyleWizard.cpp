@@ -409,7 +409,7 @@ void StyleWizard::drawWelcomeStep()
     title.setFont(getFont());
     title.setString("JKPS Style Wizard");
     title.setCharacterSize(48);
-    title.setFillColor(sf::Color::White);
+    title.setFillColor(Settings::UiTokens::OnSurface);
     title.setPosition(450.f - title.getLocalBounds().width / 2.f, 150.f);
     mWindow.draw(title);
 
@@ -431,7 +431,7 @@ void StyleWizard::drawPresetSelectionStep()
     title.setFont(getFont());
     title.setString("Choose a Preset Style");
     title.setCharacterSize(36);
-    title.setFillColor(sf::Color::White);
+    title.setFillColor(Settings::UiTokens::OnSurface);
     title.setPosition(450.f - title.getLocalBounds().width / 2.f, 80.f);
     mWindow.draw(title);
 
@@ -471,7 +471,7 @@ void StyleWizard::drawPresetSelectionStep()
         nameText.setFont(getFont());
         nameText.setString(mPresets[i].name);
         nameText.setCharacterSize(24);
-        nameText.setFillColor(sf::Color::White);
+        nameText.setFillColor(Settings::UiTokens::OnSurface);
         nameText.setPosition(buttonPos.x + 110, buttonPos.y + 10);
         mWindow.draw(nameText);
 
@@ -497,7 +497,7 @@ void StyleWizard::drawColorCustomizationStep()
     title.setFont(getFont());
     title.setString("Customize Colors");
     title.setCharacterSize(36);
-    title.setFillColor(sf::Color::White);
+    title.setFillColor(Settings::UiTokens::OnSurface);
     title.setPosition(450.f - title.getLocalBounds().width / 2.f, 80.f);
     mWindow.draw(title);
 
@@ -528,7 +528,7 @@ void StyleWizard::drawColorCustomizationStep()
     shapeLabel.setFont(getFont());
     shapeLabel.setString("Button Shape:");
     shapeLabel.setCharacterSize(16);
-    shapeLabel.setFillColor(sf::Color::White);
+    shapeLabel.setFillColor(Settings::UiTokens::OnSurface);
     shapeLabel.setPosition(150, 480);
     mWindow.draw(shapeLabel);
 
@@ -625,7 +625,7 @@ void StyleWizard::drawAnimationSettingsStep()
     title.setFont(getFont());
     title.setString("Animation & Effects");
     title.setCharacterSize(36);
-    title.setFillColor(sf::Color::White);
+    title.setFillColor(Settings::UiTokens::OnSurface);
     title.setPosition(450.f - title.getLocalBounds().width / 2.f, 80.f);
     mWindow.draw(title);
 
@@ -659,7 +659,7 @@ void StyleWizard::drawAnimationSettingsStep()
     speedLabel.setFont(getFont());
     speedLabel.setString("Animation Speed");
     speedLabel.setCharacterSize(16);
-    speedLabel.setFillColor(sf::Color::White);
+    speedLabel.setFillColor(Settings::UiTokens::OnSurface);
     speedLabel.setPosition(leftX, 295.f);
     mWindow.draw(speedLabel);
 
@@ -693,7 +693,7 @@ void StyleWizard::drawAnimationSettingsStep()
     offsetLabel.setFont(getFont());
     offsetLabel.setString("Press Offset:");
     offsetLabel.setCharacterSize(16);
-    offsetLabel.setFillColor(sf::Color::White);
+    offsetLabel.setFillColor(Settings::UiTokens::OnSurface);
     offsetLabel.setPosition(leftX, 350.f);
     mWindow.draw(offsetLabel);
 
@@ -785,7 +785,7 @@ void StyleWizard::drawAnimationSettingsStep()
     kpSpeedLabel.setFont(getFont());
     kpSpeedLabel.setString("Key Press Speed:");
     kpSpeedLabel.setCharacterSize(16);
-    kpSpeedLabel.setFillColor(sf::Color::White);
+    kpSpeedLabel.setFillColor(Settings::UiTokens::OnSurface);
     kpSpeedLabel.setPosition(rightX, 250.f);
     mWindow.draw(kpSpeedLabel);
 
@@ -816,7 +816,7 @@ void StyleWizard::drawAnimationSettingsStep()
     kpRotLabel.setFont(getFont());
     kpRotLabel.setString("Key Press Rotation:");
     kpRotLabel.setCharacterSize(16);
-    kpRotLabel.setFillColor(sf::Color::White);
+    kpRotLabel.setFillColor(Settings::UiTokens::OnSurface);
     kpRotLabel.setPosition(rightX, 305.f);
     mWindow.draw(kpRotLabel);
 
@@ -847,7 +847,7 @@ void StyleWizard::drawAnimationSettingsStep()
     kpFadeLabel.setFont(getFont());
     kpFadeLabel.setString("Key Press Fade Distance:");
     kpFadeLabel.setCharacterSize(16);
-    kpFadeLabel.setFillColor(sf::Color::White);
+    kpFadeLabel.setFillColor(Settings::UiTokens::OnSurface);
     kpFadeLabel.setPosition(rightX, 360.f);
     mWindow.draw(kpFadeLabel);
 
@@ -891,7 +891,7 @@ void StyleWizard::drawAnimationSettingsStep()
     scaleLabel.setFont(getFont());
     scaleLabel.setString("Light Scale on Click (%):");
     scaleLabel.setCharacterSize(16);
-    scaleLabel.setFillColor(sf::Color::White);
+    scaleLabel.setFillColor(Settings::UiTokens::OnSurface);
     scaleLabel.setPosition(rightX, 500.f);
     mWindow.draw(scaleLabel);
 
@@ -976,7 +976,7 @@ void StyleWizard::drawWindowSettingsStep()
     title.setFont(getFont());
     title.setString("Window Settings");
     title.setCharacterSize(36);
-    title.setFillColor(sf::Color::White);
+    title.setFillColor(Settings::UiTokens::OnSurface);
     title.setPosition(450.f - title.getLocalBounds().width / 2.f, 80.f);
     mWindow.draw(title);
 
@@ -1016,7 +1016,7 @@ void StyleWizard::drawReviewApplyStep()
     title.setFont(getFont());
     title.setString("Review & Apply");
     title.setCharacterSize(36);
-    title.setFillColor(sf::Color::White);
+    title.setFillColor(Settings::UiTokens::OnSurface);
     title.setPosition(450.f - title.getLocalBounds().width / 2.f, 80.f);
     mWindow.draw(title);
 
@@ -2182,7 +2182,7 @@ void StyleWizard::drawButton(const std::string &text, sf::Vector2f position, sf:
     buttonText.setFont(getFont());
     buttonText.setString(text);
     buttonText.setCharacterSize(Settings::UiTokens::CustomizationBodyTextSize);
-    buttonText.setFillColor(sf::Color::White);
+    buttonText.setFillColor(Settings::UiTokens::OnSurface);
     buttonText.setPosition(position.x + size.x / 2 - buttonText.getLocalBounds().width / 2,
                           position.y + size.y / 2 - buttonText.getLocalBounds().height / 2);
     mWindow.draw(buttonText);
@@ -2208,7 +2208,7 @@ void StyleWizard::drawToggle(const std::string &label, bool value, sf::Vector2f 
         sf::RectangleShape inner;
         inner.setSize(sf::Vector2f(12.f, 12.f));
         inner.setPosition(position.x + 6.f, position.y + 6.f);
-        inner.setFillColor(sf::Color::White);
+        inner.setFillColor(Settings::UiTokens::OnSurface);
         mWindow.draw(inner);
     }
 
@@ -2216,7 +2216,7 @@ void StyleWizard::drawToggle(const std::string &label, bool value, sf::Vector2f 
     labelText.setFont(getFont());
     labelText.setString(label);
     labelText.setCharacterSize(Settings::UiTokens::CustomizationBodyTextSize + 5u);
-    labelText.setFillColor(sf::Color::White);
+    labelText.setFillColor(Settings::UiTokens::OnSurface);
     labelText.setPosition(position.x + 34, position.y - 2);
     mWindow.draw(labelText);
 }
@@ -2228,7 +2228,7 @@ void StyleWizard::drawColorSwatch(sf::Color color, sf::Vector2f position, float 
     swatch.setPosition(position);
     swatch.setFillColor(color);
     swatch.setOutlineThickness(1.f);
-    swatch.setOutlineColor(sf::Color::White);
+    swatch.setOutlineColor(Settings::UiTokens::OnSurface);
     mWindow.draw(swatch);
 }
 
@@ -2290,7 +2290,7 @@ void StyleWizard::drawStepIndicator()
         label.setFont(getFont());
         label.setString(labels[i]);
         label.setCharacterSize(Settings::UiTokens::CustomizationBodyTextSize - 1u);
-        label.setFillColor(static_cast<int>(i) == currentStepIdx ? sf::Color::White : sf::Color(170, 170, 170));
+        label.setFillColor(static_cast<int>(i) == currentStepIdx ? Settings::UiTokens::OnSurface : sf::Color(170, 170, 170));
         label.setPosition(startX + static_cast<float>(i) * stepWidth - label.getLocalBounds().width / 2.f, yPos + 14.f);
         mWindow.draw(label);
     }
@@ -2508,7 +2508,7 @@ void StyleWizard::drawAnimStylePreview(int style, sf::Vector2f position, float s
     label.setFont(getFont());
     label.setString(std::string("Style: ") + styleName);
     label.setCharacterSize(Settings::UiTokens::CustomizationBodyTextSize);
-    label.setFillColor(sf::Color::White);
+    label.setFillColor(Settings::UiTokens::OnSurface);
     label.setPosition(position.x + 12.f, position.y + 7.f);
     mWindow.draw(label);
 
@@ -2573,7 +2573,7 @@ void StyleWizard::drawColorSliders(sf::Color &color, sf::Vector2f position)
         label.setFont(getFont());
         label.setString(channels[i].label);
         label.setCharacterSize(16);
-        label.setFillColor(sf::Color::White);
+        label.setFillColor(Settings::UiTokens::OnSurface);
         label.setPosition(position.x, position.y + static_cast<float>(i) * spacing);
         mWindow.draw(label);
 
@@ -2644,7 +2644,7 @@ void StyleWizard::drawNumericSlider(const std::string &label, int &value, int mi
     sf::Text txtLabel;
     txtLabel.setFont(getFont());
     txtLabel.setCharacterSize(Settings::UiTokens::CustomizationBodyTextSize - 1u);
-    txtLabel.setFillColor(sf::Color::White);
+    txtLabel.setFillColor(Settings::UiTokens::OnSurface);
     txtLabel.setString(label);
     txtLabel.setPosition(position);
     mWindow.draw(txtLabel);
@@ -2665,13 +2665,13 @@ void StyleWizard::drawNumericSlider(const std::string &label, int &value, int mi
     sf::CircleShape handle(6.f);
     handle.setOrigin(6.f, 6.f);
     handle.setPosition(position.x + 150.f + barWidth * pct, position.y + 8.f);
-    handle.setFillColor(sf::Color::White);
+    handle.setFillColor(Settings::UiTokens::OnSurface);
     mWindow.draw(handle);
 
     sf::Text txtVal;
     txtVal.setFont(getFont());
     txtVal.setCharacterSize(14);
-    txtVal.setFillColor(sf::Color::White);
+    txtVal.setFillColor(Settings::UiTokens::OnSurface);
     txtVal.setString(std::to_string(value));
     txtVal.setPosition(position.x + 150.f + barWidth + 15.f, position.y);
     mWindow.draw(txtVal);

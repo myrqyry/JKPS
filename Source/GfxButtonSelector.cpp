@@ -39,7 +39,7 @@ GfxButtonSelector::GfxButtonSelector()
     mButtons[AcceptButton] = std::move(acceptButton);
 
     mCursor.setOutlineThickness(1);
-    mCursor.setFillColor(sf::Color::White);
+    mCursor.setFillColor(Settings::UiTokens::OnSurface);
     mCursor.setOutlineColor(sf::Color::Black);
     mCursor.setOrigin(mCursor.getSize() / 2.f);
     // set visual key button height since it is the only one gfx button where the cursor is needed
@@ -168,7 +168,7 @@ void GfxButtonSelector::handleButtonModificationEvent(sf::Event event)
         // If user starts to write anything, then change text color and delete the hint
         if (mButtons[VisualKeyButton]->mValText.getFillColor() == mDefaultVisualKeyColor && strChanged)
         {
-            mButtons[VisualKeyButton]->mValText.setFillColor(sf::Color::White);
+            mButtons[VisualKeyButton]->mValText.setFillColor(Settings::UiTokens::OnSurface);
             mSelectedBtn->mValText.setString("");
             str = "";
             if (isCharacter(key.code))
