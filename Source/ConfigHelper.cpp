@@ -720,47 +720,42 @@ void saveConfig(
         ofCfg << "[Visual keys]\nVisual keys: Z,X\n";
     }
 
+    (void)parameters; // Parameter values read from shared LogicalParameter objects
+
+    // Iterate parameterLines (which has section markers and parameter entries
+    // in ParameterLine::ID order) and emit each entry.
     bool commentsSection = false;
-    auto parmPair = parameters.begin();
-    auto parmLinePair = parameterLines.begin();
-    while (parmPair != parameters.end() || parmLinePair != parameterLines.end())
+    for (auto &[lineId, line] : parameterLines)
     {
-        using Ptr = std::shared_ptr<LogicalParameter>;
-        Ptr parP = parmPair != parameters.end() ? parmPair->second : nullptr;
-        Ptr parP2 = parmLinePair != parameterLines.end() ? parmLinePair->second->getParameter() : nullptr;
-        Ptr mainParP = nullptr;
+        auto *par = line->getParameter().get();
+        if (!par)
+            continue;
 
-        if (parP == parP2)
-        {
-            mainParP = parP;
-            ++parmPair; ++parmLinePair;
-        }
 
-        // Write Empty or Collection first, since any collection doesn't end up with a String
-        if (parmLinePair != parameterLines.end()
-        && (parP2->mType == LogicalParameter::Type::Empty
-        ||  parP2->mType == LogicalParameter::Type::Collection
-        ||  parP2->mType == LogicalParameter::Type::Hint))
-        {
-            mainParP = parP2;
-            ++parmLinePair;
-        }
-        else if (parmPair != parameters.end() && parP != parP2)
-        {
-            mainParP = parP;
-            ++parmPair;
-        }
 
         if (commentsSection)
             ofCfg << "# ";
-        ofCfg << mainParP->mParName;
-        if (mainParP->mType != LogicalParameter::Type::Empty
-        &&  mainParP->mType != LogicalParameter::Type::Collection
-        &&  mainParP->mType != LogicalParameter::Type::Hint)
-            ofCfg << ": " << mainParP->getValStr();
-        ofCfg << "\n";
 
-        if (parmLinePair != parameterLines.end() && parmLinePair->first == ParameterLine::ID::Info1)
+        // Collection → section header.  mParName already includes brackets.
+        if (par->mType == LogicalParameter::Type::Collection)
+        {
+            ofCfg << "\n" << par->mParName << "\n";
+        }
+        else if (par->mType == LogicalParameter::Type::Empty)
+        {
+            ofCfg << "\n";
+        }
+        else if (par->mType == LogicalParameter::Type::Hint)
+        {
+            ofCfg << par->mParName << "\n";
+        }
+        else
+        {
+            // Regular parameter — write name: value
+            ofCfg << par->mParName << ": " << par->getValStr() << "\n";
+        }
+
+        if (lineId == ParameterLine::ID::Info1)
             commentsSection = true;
     }
 

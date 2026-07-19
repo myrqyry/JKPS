@@ -1,28 +1,13 @@
-Failed to read '[Statistics text strings] Font filepath'. Default value will be set.
+Failed to read '[Statistics text] Enable advanced mode for statistics text'. Default value will be set.
 Failed to read '[Buttons text] Text color'. Default value will be set.
 Failed to read '[Buttons text] Character size'. Default value will be set.
 Failed to read '[Buttons text] Outline thickness'. Default value will be set.
-Failed to read '[Buttons text] Outline color'. Default value will be set.
-Failed to read '[Buttons text] Position offset'. Default value will be set.
-Failed to read '[Buttons text] Text bounds toggle'. Default value will be set.
-Failed to read '[Buttons text] Text bounds'. Default value will be set.
-Failed to read '[Buttons text] Ignore button movement'. Default value will be set.
-Failed to read '[Buttons text] Bold'. Default value will be set.
-Failed to read '[Buttons text] Italic'. Default value will be set.
-Failed to read '[Buttons text] Show key labels'. Default value will be set.
-Failed to read '[Buttons text] Visual keys text position offset'. Default value will be set.
-Failed to read '[Buttons text] Show key counters'. Default value will be set.
-Failed to read '[Buttons text] Key counters text position offset'. Default value will be set.
-Failed to read '[Buttons text] Show key KPS'. Default value will be set.
-Failed to read '[Buttons text] KPS text position offset'. Default value will be set.
-Failed to read '[Buttons text] Show key BPM'. Default value will be set.
 Failed to read '[Buttons text] Enable advanced mode for separate button value positions'. Default value will be set.
+Failed to read '[Buttons text advanced settings] Enable advanced mode for button text'. Default value will be set.
+Failed to read '[Buttons text advanced settings] 1. Character size'. Default value will be set.
 Failed to read '[Button graphics] Texture filepath'. Default value will be set.
 Failed to read '[Button graphics] Texture size'. Default value will be set.
 Failed to read '[Button graphics] Texture color'. Default value will be set.
-Failed to read '[Button graphics] Border color'. Default value will be set.
-Failed to read '[Button graphics] Button shape'. Default value will be set.
-Failed to read '[Button graphics] Enable advanced mode for button graphics'. Default value will be set.
 Failed to read '[Button graphics advanced settings] 6. Visual key text position offset'. Default value will be set.
 Failed to read '[Button graphics advanced settings] 6. Key counter text position offset'. Default value will be set.
 Failed to read '[Button graphics advanced settings] 6. KPS text position offset'. Default value will be set.
@@ -99,28 +84,6 @@ Failed to read '[Statistics save] Saved total 19'. Default value will be set.
 Failed to read '[Statistics save] Saved total 20'. Default value will be set.
 Failed to read '[Statistics save] 12. Character size'. Default value will be set.
 Failed to read '[Statistics save] 12. Outline thickness'. Default value will be set.
-Failed to read '[Statistics save] 12. Outline color'. Default value will be set.
-Failed to read '[Statistics save] 12. Position offset'. Default value will be set.
-Failed to read '[Statistics save] 12. Text bounds'. Default value will be set.
-Failed to read '[Statistics save] 12. Bold'. Default value will be set.
-Failed to read '[Statistics save] 12. Italic'. Default value will be set.
-Failed to read '[Statistics save] 13. Text color'. Default value will be set.
-Failed to read '[Statistics save] 13. Character size'. Default value will be set.
-Failed to read '[Statistics save] 13. Outline thickness'. Default value will be set.
-Failed to read '[Statistics save] 13. Outline color'. Default value will be set.
-Failed to read '[Statistics save] 13. Position offset'. Default value will be set.
-Failed to read '[Statistics save] 13. Text bounds'. Default value will be set.
-Failed to read '[Statistics save] 13. Bold'. Default value will be set.
-Failed to read '[Statistics save] 13. Italic'. Default value will be set.
-Failed to read '[Statistics save] 14. Text color'. Default value will be set.
-Failed to read '[Statistics save] 14. Character size'. Default value will be set.
-Failed to read '[Statistics save] 14. Outline thickness'. Default value will be set.
-Failed to read '[Statistics save] 14. Outline color'. Default value will be set.
-Failed to read '[Statistics save] 14. Position offset'. Default value will be set.
-Failed to read '[Statistics save] 14. Text bounds'. Default value will be set.
-Failed to read '[Statistics save] 14. Bold'. Default value will be set.
-Failed to read '[Statistics save] 14. Italic'. Default value will be set.
-Failed to read '[Statistics save] 15. Text color'. Default value will be set.
 Failed to read '[Statistics save] 15. Character size'. Default value will be set.
 Failed to read '[Statistics save] 15. Outline thickness'. Default value will be set.
 Failed to read '[Statistics save] 15. Outline color'. Default value will be set.

@@ -743,15 +743,13 @@ void Menu::buildParametersMap()
 
 void Menu::buildParameterLines()
 {
-    for (auto &pair : mParameters)
-    {
-        mParameterLines.emplace(std::make_pair(ParameterLine::parIdToParLineId(pair.first), 
-            new ParameterLine(pair.second, mFonts, mTextures, mWindow)));
-    }
-    
     using sPtr = std::shared_ptr<LogicalParameter>;
-    sPtr parP = nullptr;
     sPtr emptyP(new LogicalParameter(LogicalParameter::Type::Empty, std::monostate{}));
+
+    // Register Collection/Empty/Hint markers first so that
+    // parIdToParLineId (run below) cannot overwrite them when
+    // multiple parameters map to the same ParameterLine::ID.
+    sPtr parP = nullptr;
     size_t collectionNameIdx = 0u;
 
     parP = sPtr(new LogicalParameter(LogicalParameter::Type::Collection, std::monostate{}, mCollectionNames.at(collectionNameIdx++)));
@@ -874,6 +872,16 @@ void Menu::buildParameterLines()
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::ProgramVersion, new ParameterLine(parP, mFonts, mTextures, mWindow)));
 
     mParameterLines.emplace(std::make_pair(ParameterLine::ID::LastLine, new ParameterLine(emptyP, mFonts, mTextures, mWindow)));
+
+    // Register lines for all config parameters.  Because the
+    // Collection/Empty/Hint markers above were emplaced first,
+    // any parIdToParLineId return value that aliases a marker
+    // ID will fail to overwrite it — the marker wins.
+    for (auto &pair : mParameters)
+    {
+        mParameterLines.emplace(std::make_pair(ParameterLine::parIdToParLineId(pair.first),
+            new ParameterLine(pair.second, mFonts, mTextures, mWindow)));
+    }
 
     positionMenuLines();
 }

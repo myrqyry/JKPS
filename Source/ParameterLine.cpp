@@ -866,7 +866,7 @@ ParameterLine::ID ParameterLine::parIdToParLineId(LogicalParameter::ID id)
         return std::nullopt;
     };
 
-    if (auto result = fromGroup(LogicalParameter::ID::StatTextDist, ParameterLine::ID::StatTextDist, 17u))
+    if (auto result = fromGroup(LogicalParameter::ID::StatTextDist, ParameterLine::ID::StatTextDist, 16u))
         return *result;
     if (auto result = fromGroup(LogicalParameter::ID::StatTextAdvMode, ParameterLine::ID::StatTextAdvMode, 1u))
         return *result;
