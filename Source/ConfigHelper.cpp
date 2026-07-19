@@ -702,8 +702,11 @@ std::queue<LogKey> oldReadButtons(const std::string &buttonsStr, const std::stri
 
 void saveConfig(
     const Menu::ParametersContainer &parameters, const Menu::ParameterLinesContainer &parameterLines,
+    const std::vector<std::string> &collectionNames,
     const std::vector<std::unique_ptr<Button>> *mKeys, bool saveKeys)
 {
+    (void)parameterLines;
+
     std::ofstream ofCfg(tmpCfgPath);
 
     ofCfg << defCfgComment;
@@ -720,43 +723,19 @@ void saveConfig(
         ofCfg << "[Visual keys]\nVisual keys: Z,X\n";
     }
 
-    (void)parameters; // Parameter values read from shared LogicalParameter objects
-
-    // Iterate parameterLines (which has section markers and parameter entries
-    // in ParameterLine::ID order) and emit each entry.
-    bool commentsSection = false;
-    for (auto &[lineId, line] : parameterLines)
+    // Write in the same enum-ID order and section progression as
+    // readParameters (read-then-advance).  Section headers are emitted
+    // after the marker parameter, so it stays under the current section.
+    std::size_t colIdx = 0;
+    ofCfg << "\n" << collectionNames[colIdx] << "\n";
+    for (auto &[id, par] : parameters)
     {
-        auto *par = line->getParameter().get();
-        if (!par)
-            continue;
-
-
-
-        if (commentsSection)
-            ofCfg << "# ";
-
-        // Collection → section header.  mParName already includes brackets.
-        if (par->mType == LogicalParameter::Type::Collection)
+        ofCfg << par->mParName << ": " << par->getValStr() << "\n";
+        if (isNextCollection(id) && colIdx + 1u < collectionNames.size())
         {
-            ofCfg << "\n" << par->mParName << "\n";
+            ++colIdx;
+            ofCfg << "\n" << collectionNames[colIdx] << "\n";
         }
-        else if (par->mType == LogicalParameter::Type::Empty)
-        {
-            ofCfg << "\n";
-        }
-        else if (par->mType == LogicalParameter::Type::Hint)
-        {
-            ofCfg << par->mParName << "\n";
-        }
-        else
-        {
-            // Regular parameter — write name: value
-            ofCfg << par->mParName << ": " << par->getValStr() << "\n";
-        }
-
-        if (lineId == ParameterLine::ID::Info1)
-            commentsSection = true;
     }
 
     ofCfg.close();

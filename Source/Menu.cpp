@@ -32,7 +32,7 @@ Menu::Menu()
     buildParameterLines();
     buildMenuTabs();
     if (!read)
-        ConfigHelper::saveConfig(mParameters, mParameterLines, nullptr, false);
+        ConfigHelper::saveConfig(mParameters, mParameterLines, mCollectionNames, nullptr, false);
 
     mSliderBar.setOrigin(mSliderBar.getSize() / 2.f);
     mSliderBar.setPosition(949.f, 100.f);
@@ -1009,7 +1009,7 @@ void Menu::saveConfig(const std::vector<std::unique_ptr<Button>> &mKeys)
 {
     if (Settings::SaveStats)
         updateSaveStatsStrings();
-    ConfigHelper::saveConfig(mParameters, mParameterLines, &mKeys, true);
+    ConfigHelper::saveConfig(mParameters, mParameterLines, mCollectionNames, &mKeys, true);
 }
 
 void Menu::requestFocus()

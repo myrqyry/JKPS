@@ -43,6 +43,7 @@ std::string scanParameterValueCached(const std::string &parName, bool &isParamFo
 void createDefaultConfig();
 void saveConfig(
     const Menu::ParametersContainer &parameters, const Menu::ParameterLinesContainer &parameterLines,
+    const std::vector<std::string> &collectionNames,
     const std::vector<std::unique_ptr<Button>> *mKeys, bool saveKeys);
 
 std::string getKeysStr(const std::vector<std::unique_ptr<Button>> &mKeys, bool readRealStr);
