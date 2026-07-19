@@ -17,53 +17,53 @@ Failed to read '[Buttons text] Show key KPS'. Default value will be set.
 Failed to read '[Buttons text] KPS text position offset'. Default value will be set.
 Failed to read '[Buttons text] Show key BPM'. Default value will be set.
 Failed to read '[Buttons text] Enable advanced mode for separate button value positions'. Default value will be set.
-Failed to read '[Button graphics] 4. KPS text position offset'. Default value will be set.
-Failed to read '[Button graphics] 4. BPM text position offset'. Default value will be set.
-Failed to read '[Button graphics] 5. Visual key text position offset'. Default value will be set.
-Failed to read '[Button graphics] 5. Key counter text position offset'. Default value will be set.
-Failed to read '[Button graphics] 5. KPS text position offset'. Default value will be set.
-Failed to read '[Button graphics] 5. BPM text position offset'. Default value will be set.
+Failed to read '[Button graphics] Texture filepath'. Default value will be set.
+Failed to read '[Button graphics] Texture size'. Default value will be set.
+Failed to read '[Button graphics] Texture color'. Default value will be set.
+Failed to read '[Button graphics] Border color'. Default value will be set.
+Failed to read '[Button graphics] Button shape'. Default value will be set.
+Failed to read '[Button graphics] Enable advanced mode for button graphics'. Default value will be set.
 Failed to read '[Button graphics advanced settings] 6. Visual key text position offset'. Default value will be set.
 Failed to read '[Button graphics advanced settings] 6. Key counter text position offset'. Default value will be set.
 Failed to read '[Button graphics advanced settings] 6. KPS text position offset'. Default value will be set.
-Failed to read '[Button graphics advanced settings] 6. BPM text position offset'. Default value will be set.
-Failed to read '[Common parameters] 7. Visual key text position offset'. Default value will be set.
-Failed to read '[Light animation] 7. Key counter text position offset'. Default value will be set.
-Failed to read '[Light animation] 7. KPS text position offset'. Default value will be set.
-Failed to read '[Light animation] 7. BPM text position offset'. Default value will be set.
-Failed to read '[Light animation] 8. Visual key text position offset'. Default value will be set.
-Failed to read '[Press animation] 8. Key counter text position offset'. Default value will be set.
-Failed to read '[Press animation] 8. KPS text position offset'. Default value will be set.
-Failed to read '[Main window] 8. BPM text position offset'. Default value will be set.
-Failed to read '[Main window] 9. Visual key text position offset'. Default value will be set.
-Failed to read '[Main window] 9. Key counter text position offset'. Default value will be set.
-Failed to read '[Main window] 9. KPS text position offset'. Default value will be set.
-Failed to read '[Main window] 9. BPM text position offset'. Default value will be set.
-Failed to read '[Main window] 10. Visual key text position offset'. Default value will be set.
-Failed to read '[Main window] 10. Key counter text position offset'. Default value will be set.
-Failed to read '[Main window] 10. KPS text position offset'. Default value will be set.
-Failed to read '[Main window] 10. BPM text position offset'. Default value will be set.
-Failed to read '[Main window] 11. Visual key text position offset'. Default value will be set.
-Failed to read '[Extra KPS window] 11. Key counter text position offset'. Default value will be set.
-Failed to read '[Extra KPS window] 11. KPS text position offset'. Default value will be set.
-Failed to read '[Extra KPS window] 11. BPM text position offset'. Default value will be set.
-Failed to read '[Extra KPS window] 12. Visual key text position offset'. Default value will be set.
-Failed to read '[Extra KPS window] 12. Key counter text position offset'. Default value will be set.
-Failed to read '[Extra KPS window] 12. KPS text position offset'. Default value will be set.
-Failed to read '[Extra KPS window] 12. BPM text position offset'. Default value will be set.
-Failed to read '[Extra KPS window] 13. Visual key text position offset'. Default value will be set.
-Failed to read '[Extra KPS window] 13. Key counter text position offset'. Default value will be set.
-Failed to read '[Extra KPS window] 13. KPS text position offset'. Default value will be set.
+Failed to read '[Button graphics advanced settings] Animation duration (frames)'. Default value will be set.
+Failed to read '[Common parameters] Enabled'. Default value will be set.
+Failed to read '[Light animation] Texture filepath'. Default value will be set.
+Failed to read '[Light animation] Scale on click (%)'. Default value will be set.
+Failed to read '[Light animation] Color'. Default value will be set.
+Failed to read '[Light animation] Enabled'. Default value will be set.
+Failed to read '[Press animation] Offset'. Default value will be set.
+Failed to read '[Press animation] Background texture filepath'. Default value will be set.
+Failed to read '[Main window] Background color'. Default value will be set.
+Failed to read '[Main window] Scale background texture if it does not fit'. Default value will be set.
+Failed to read '[Main window] Title bar'. Default value will be set.
+Failed to read '[Main window] Window resizable'. Default value will be set.
+Failed to read '[Main window] Render update frequency'. Default value will be set.
+Failed to read '[Main window] Bonus size top'. Default value will be set.
+Failed to read '[Main window] Bonus size bottom'. Default value will be set.
+Failed to read '[Main window] Bonus size left'. Default value will be set.
+Failed to read '[Main window] Bonus size right'. Default value will be set.
+Failed to read '[Main window] Enable from start'. Default value will be set.
+Failed to read '[Extra KPS window] Window size'. Default value will be set.
+Failed to read '[Extra KPS window] Text character size:'. Default value will be set.
+Failed to read '[Extra KPS window] Number character size'. Default value will be set.
+Failed to read '[Extra KPS window] Background color'. Default value will be set.
+Failed to read '[Extra KPS window] Text color'. Default value will be set.
+Failed to read '[Extra KPS window] Number color'. Default value will be set.
+Failed to read '[Extra KPS window] Text font filepath'. Default value will be set.
+Failed to read '[Extra KPS window] Number font filepaht'. Default value will be set.
+Failed to read '[Extra KPS window] Top padding'. Default value will be set.
+Failed to read '[Extra KPS window] Distance between text'. Default value will be set.
 Failed to read '[Extra KPS window] 13. BPM text position offset'. Default value will be set.
-Failed to read '[Extra KPS window] 14. Visual key text position offset'. Default value will be set.
-Failed to read '[Key press visualization] 14. Key counter text position offset'. Default value will be set.
-Failed to read '[Key press visualization] 14. KPS text position offset'. Default value will be set.
-Failed to read '[Key press visualization] 14. BPM text position offset'. Default value will be set.
-Failed to read '[Key press visualization] 15. Visual key text position offset'. Default value will be set.
-Failed to read '[Key press visualization] 15. Key counter text position offset'. Default value will be set.
-Failed to read '[Key press visualization] 15. KPS text position offset'. Default value will be set.
-Failed to read '[Key press visualization] 15. BPM text position offset'. Default value will be set.
-Failed to read '[Key press visualization] 16. Visual key text position offset'. Default value will be set.
+Failed to read '[Extra KPS window] Enabled'. Default value will be set.
+Failed to read '[Key press visualization] Speed'. Default value will be set.
+Failed to read '[Key press visualization] Movement rotation'. Default value will be set.
+Failed to read '[Key press visualization] Fade out distance'. Default value will be set.
+Failed to read '[Key press visualization] Spawn position offset'. Default value will be set.
+Failed to read '[Key press visualization] Color'. Default value will be set.
+Failed to read '[Key press visualization] Bonus width scale (%)'. Default value will be set.
+Failed to read '[Key press visualization] Fixed height to replace holds'. Default value will be set.
+Failed to read '[Key press visualization] Enable advanced mode for key press visualization'. Default value will be set.
 Failed to read '[Key press visualization advanced settings] 16. Key counter text position offset'. Default value will be set.
 Failed to read '[Key press visualization advanced settings] 16. KPS text position offset'. Default value will be set.
 Failed to read '[Key press visualization advanced settings] 16. BPM text position offset'. Default value will be set.
@@ -71,32 +71,32 @@ Failed to read '[Key press visualization advanced settings] 17. Visual key text 
 Failed to read '[Key press visualization advanced settings] 17. Key counter text position offset'. Default value will be set.
 Failed to read '[Key press visualization advanced settings] 17. KPS text position offset'. Default value will be set.
 Failed to read '[Key press visualization advanced settings] 17. BPM text position offset'. Default value will be set.
-Failed to read '[Key press visualization advanced settings] 18. Visual key text position offset'. Default value will be set.
-Failed to read '[Other] 18. Key counter text position offset'. Default value will be set.
-Failed to read '[Other] 18. KPS text position offset'. Default value will be set.
-Failed to read '[Other] 18. BPM text position offset'. Default value will be set.
-Failed to read '[Other] 19. Visual key text position offset'. Default value will be set.
-Failed to read '[Statistics save] 19. Key counter text position offset'. Default value will be set.
-Failed to read '[Statistics save] 19. KPS text position offset'. Default value will be set.
-Failed to read '[Statistics save] 19. BPM text position offset'. Default value will be set.
-Failed to read '[Statistics save] 20. Visual key text position offset'. Default value will be set.
-Failed to read '[Statistics save] 20. Key counter text position offset'. Default value will be set.
-Failed to read '[Statistics save] 20. KPS text position offset'. Default value will be set.
-Failed to read '[Statistics save] 20. BPM text position offset'. Default value will be set.
-Failed to read '[Statistics save] 10. Outline color'. Default value will be set.
-Failed to read '[Statistics save] 10. Position offset'. Default value will be set.
-Failed to read '[Statistics save] 10. Text bounds'. Default value will be set.
-Failed to read '[Statistics save] 10. Bold'. Default value will be set.
-Failed to read '[Statistics save] 10. Italic'. Default value will be set.
-Failed to read '[Statistics save] 11. Text color'. Default value will be set.
-Failed to read '[Statistics save] 11. Character size'. Default value will be set.
-Failed to read '[Statistics save] 11. Outline thickness'. Default value will be set.
-Failed to read '[Statistics save] 11. Outline color'. Default value will be set.
-Failed to read '[Statistics save] 11. Position offset'. Default value will be set.
-Failed to read '[Statistics save] 11. Text bounds'. Default value will be set.
-Failed to read '[Statistics save] 11. Bold'. Default value will be set.
-Failed to read '[Statistics save] 11. Italic'. Default value will be set.
-Failed to read '[Statistics save] 12. Text color'. Default value will be set.
+Failed to read '[Key press visualization advanced settings] Update statistics on quit'. Default value will be set.
+Failed to read '[Other] Show opposite key values on alt press'. Default value will be set.
+Failed to read '[Other] Reduce motion in customization windows'. Default value will be set.
+Failed to read '[Other] Value to multiply on click'. Default value will be set.
+Failed to read '[Other] Saved max KPS'. Default value will be set.
+Failed to read '[Statistics save] Saved total'. Default value will be set.
+Failed to read '[Statistics save] Saved total 1'. Default value will be set.
+Failed to read '[Statistics save] Saved total 2'. Default value will be set.
+Failed to read '[Statistics save] Saved total 3'. Default value will be set.
+Failed to read '[Statistics save] Saved total 4'. Default value will be set.
+Failed to read '[Statistics save] Saved total 5'. Default value will be set.
+Failed to read '[Statistics save] Saved total 6'. Default value will be set.
+Failed to read '[Statistics save] Saved total 7'. Default value will be set.
+Failed to read '[Statistics save] Saved total 8'. Default value will be set.
+Failed to read '[Statistics save] Saved total 9'. Default value will be set.
+Failed to read '[Statistics save] Saved total 10'. Default value will be set.
+Failed to read '[Statistics save] Saved total 11'. Default value will be set.
+Failed to read '[Statistics save] Saved total 12'. Default value will be set.
+Failed to read '[Statistics save] Saved total 13'. Default value will be set.
+Failed to read '[Statistics save] Saved total 14'. Default value will be set.
+Failed to read '[Statistics save] Saved total 15'. Default value will be set.
+Failed to read '[Statistics save] Saved total 16'. Default value will be set.
+Failed to read '[Statistics save] Saved total 17'. Default value will be set.
+Failed to read '[Statistics save] Saved total 18'. Default value will be set.
+Failed to read '[Statistics save] Saved total 19'. Default value will be set.
+Failed to read '[Statistics save] Saved total 20'. Default value will be set.
 Failed to read '[Statistics save] 12. Character size'. Default value will be set.
 Failed to read '[Statistics save] 12. Outline thickness'. Default value will be set.
 Failed to read '[Statistics save] 12. Outline color'. Default value will be set.
@@ -171,36 +171,36 @@ Failed to read '[Statistics save] 20. Italic'. Default value will be set.
 Failed to read '[Statistics save] 15. Fixed height to replace holds'. Default value will be set.
 Failed to read '[Statistics save] 16. Speed'. Default value will be set.
 Failed to read '[Statistics save] 16. Rotation'. Default value will be set.
-Failed to read '[Statistics save] 16. Fade line length'. Default value will be set.
 Failed to read '[Statistics save] 16. Spawn position offset'. Default value will be set.
+Failed to read '[Statistics save] 16. Fade line length'. Default value will be set.
 Failed to read '[Statistics save] 16. Color'. Default value will be set.
 Failed to read '[Statistics save] 16. Bonus width scale'. Default value will be set.
 Failed to read '[Statistics save] 16. Fixed height to replace holds'. Default value will be set.
 Failed to read '[Statistics save] 17. Speed'. Default value will be set.
 Failed to read '[Statistics save] 17. Rotation'. Default value will be set.
-Failed to read '[Statistics save] 17. Fade line length'. Default value will be set.
 Failed to read '[Statistics save] 17. Spawn position offset'. Default value will be set.
+Failed to read '[Statistics save] 17. Fade line length'. Default value will be set.
 Failed to read '[Statistics save] 17. Color'. Default value will be set.
 Failed to read '[Statistics save] 17. Bonus width scale'. Default value will be set.
 Failed to read '[Statistics save] 17. Fixed height to replace holds'. Default value will be set.
 Failed to read '[Statistics save] 18. Speed'. Default value will be set.
 Failed to read '[Statistics save] 18. Rotation'. Default value will be set.
-Failed to read '[Statistics save] 18. Fade line length'. Default value will be set.
 Failed to read '[Statistics save] 18. Spawn position offset'. Default value will be set.
+Failed to read '[Statistics save] 18. Fade line length'. Default value will be set.
 Failed to read '[Statistics save] 18. Color'. Default value will be set.
 Failed to read '[Statistics save] 18. Bonus width scale'. Default value will be set.
 Failed to read '[Statistics save] 18. Fixed height to replace holds'. Default value will be set.
 Failed to read '[Statistics save] 19. Speed'. Default value will be set.
 Failed to read '[Statistics save] 19. Rotation'. Default value will be set.
-Failed to read '[Statistics save] 19. Fade line length'. Default value will be set.
 Failed to read '[Statistics save] 19. Spawn position offset'. Default value will be set.
+Failed to read '[Statistics save] 19. Fade line length'. Default value will be set.
 Failed to read '[Statistics save] 19. Color'. Default value will be set.
 Failed to read '[Statistics save] 19. Bonus width scale'. Default value will be set.
 Failed to read '[Statistics save] 19. Fixed height to replace holds'. Default value will be set.
 Failed to read '[Statistics save] 20. Speed'. Default value will be set.
 Failed to read '[Statistics save] 20. Rotation'. Default value will be set.
-Failed to read '[Statistics save] 20. Fade line length'. Default value will be set.
 Failed to read '[Statistics save] 20. Spawn position offset'. Default value will be set.
+Failed to read '[Statistics save] 20. Fade line length'. Default value will be set.
 Failed to read '[Statistics save] 20. Color'. Default value will be set.
 Failed to read '[Statistics save] 20. Bonus width scale'. Default value will be set.
 Failed to read '[Statistics save] 20. Fixed height to replace holds'. Default value will be set.
